@@ -47,6 +47,11 @@ export const fazerCheckOut = (reservaId, usuarioId, arquivos) => {
   });
 };
 
+export const getRegras = () => api.get("/regras");
+export const criarRegra = (data) => api.post("/regras", data);
+export const atualizarRegra = (id, data) => api.put(`/regras/${id}`, data);
+export const deletarRegra = (id) => api.delete(`/regras/${id}`);
+
 export const uploadArquivo = (arquivo) => {
   const formData = new FormData();
   formData.append("file", arquivo);

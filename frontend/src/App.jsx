@@ -3,6 +3,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Admin from "./pages/AdminPages/Admin";
 import CadastroSala from "./pages/AdminPages/CadastroSala";
 import EditarSala from "./pages/AdminPages/EditarSala";
+import RegrasAvaliacao from "./pages/AdminPages/RegrasAvaliacao";
 import Login from "./pages/Login/Login";
 import Home from "./pages/Home/Home";
 import Reserva from "./pages/Reserva/Reserva";
@@ -25,14 +26,14 @@ function App() {
 
           <Route element={<Layout />}>
             {/* Rotas exclusivas de USER e ADMIN */}
-            <Route 
-            path="/home" 
-            element={
-              <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
-                <Home />
-              </ProtectedRoute>
-            } 
-          />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/criar-reserva/:id"
               element={
@@ -57,7 +58,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/perfil"
               element={
@@ -66,6 +66,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
             {/* Rotas Exclusivas de ADMIN */}
             <Route
               path="/admin"
@@ -88,6 +89,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["ADMIN"]}>
                   <EditarSala />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/regras-avaliacao"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <RegrasAvaliacao />
                 </ProtectedRoute>
               }
             />

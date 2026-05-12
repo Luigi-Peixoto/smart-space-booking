@@ -135,7 +135,7 @@ function Perfil() {
             <p className="user-email">{user?.email || "email@ssb-corp.com"}</p>
             <div className="trust-score-badge">
               <span className="score-label">TRUST SCORE:</span>
-              <span className="score-value">★ {user?.trustScore || 100}/100</span>
+              <span className="score-value">★ {user?.trustScore || 0}/100</span>
             </div>
           </div>
           <button className="logout-button" onClick={handleLogout}>
