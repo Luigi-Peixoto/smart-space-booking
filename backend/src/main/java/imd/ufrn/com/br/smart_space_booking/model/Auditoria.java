@@ -1,11 +1,12 @@
 package imd.ufrn.com.br.smart_space_booking.model;
 
-
-import imd.ufrn.com.br.smart_space_booking.enums.AuditoriaCategoria;
+import imd.ufrn.com.br.smart_space_booking.dto.AvaliacaoCriterioDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.AuditoriaTipo;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,13 +36,15 @@ public class Auditoria {
     @Column(name = "aprovado")
     private Boolean aprovado;
 
-    @Column(name = "observacoes", length = 500)
-    private String observacoes;
+    @Column(name = "observacao_geral", length = 500)
+    private String observacaoGeral;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "criterios_json", columnDefinition = "jsonb")
+    private List<AvaliacaoCriterioDTO> criterios = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "categoria")
-    private AuditoriaCategoria categoria;
+    @Column(name = "delta_trust_score_aplicado")
+    private Integer deltaTrustScoreAplicado;
 
     @ElementCollection
     @CollectionTable(name = "audit_image_ids", joinColumns = @JoinColumn(name = "audit_id"))

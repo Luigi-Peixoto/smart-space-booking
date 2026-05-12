@@ -1,6 +1,5 @@
 package imd.ufrn.com.br.smart_space_booking.dto;
 
-import imd.ufrn.com.br.smart_space_booking.enums.AuditoriaCategoria;
 import imd.ufrn.com.br.smart_space_booking.enums.AuditoriaTipo;
 import imd.ufrn.com.br.smart_space_booking.model.Auditoria;
 
@@ -12,9 +11,10 @@ public record AuditoriaResponseDTO(
         Long reservaId,
         AuditoriaTipo tipo,
         Boolean aprovado,
-        String observacoes,
-        AuditoriaCategoria categoria,
+        String observacaoGeral,
+        List<AvaliacaoCriterioDTO> criterios,
         List<String> imageIds,
+        Integer deltaTrustScoreAplicado,
         LocalDateTime dateCreated
 ) {
     public static AuditoriaResponseDTO fromEntity(Auditoria auditoria) {
@@ -23,9 +23,10 @@ public record AuditoriaResponseDTO(
                 auditoria.getReserva().getId(),
                 auditoria.getTipo(),
                 auditoria.getAprovado(),
-                auditoria.getObservacoes(),
-                auditoria.getCategoria(),
+                auditoria.getObservacaoGeral(),
+                auditoria.getCriterios(),
                 auditoria.getImageIds(),
+                auditoria.getDeltaTrustScoreAplicado(),
                 auditoria.getDateCreated()
         );
     }
