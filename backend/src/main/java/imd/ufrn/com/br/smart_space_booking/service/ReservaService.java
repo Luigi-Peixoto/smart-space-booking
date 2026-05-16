@@ -13,6 +13,7 @@ import imd.ufrn.com.br.smart_space_booking.dto.ReservaRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.ReservaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
 import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
+import imd.ufrn.com.br.smart_space_booking.exception.AcessoNegadoException;
 import imd.ufrn.com.br.smart_space_booking.exception.ConflitoHorarioException;
 import imd.ufrn.com.br.smart_space_booking.exception.RegraNegocioException;
 import imd.ufrn.com.br.smart_space_booking.exception.ReservaNotFoundException;
@@ -146,21 +147,21 @@ public class ReservaService {
         reservaRepository.save(reserva);
     }
 
-//    @Transactional
-//    public void cancelarReserva(Long reservaId, Long usuarioLogadoId) {
-//        Reserva reserva = reservaRepository.findById(reservaId)
-//                .orElseThrow(() -> new ReservaNotFoundException("Reserva não encontrada com o ID: " + reservaId));
-//
-//        if (!reserva.getUsuario().getId().equals(usuarioLogadoId))
-//            throw new RegraNegocioException("Acesso negado: você não pode cancelar a reserva de outro usuário.");
-//
-//        if (reserva.getStatus() != ReservaStatus.CONFIRMADA)
-//            throw new RegraNegocioException("Só é possível cancelar reservas com status CONFIRMADA.");
-//
-//        reserva.setStatus(ReservaStatus.CANCELADA);
-//        reserva.setMotivoCancelamento("CANCELADO MANUALMENTE");
-//        reservaRepository.save(reserva);
-//    }
+   @Transactional
+   public void cancelarReserva(Long reservaId, Long usuarioLogadoId) {
+       Reserva reserva = reservaRepository.findById(reservaId)
+               .orElseThrow(() -> new ReservaNotFoundException("Reserva não encontrada com o ID: " + reservaId));
+
+       if (!reserva.getUsuario().getId().equals(usuarioLogadoId))
+           throw new AcessoNegadoException("Acesso negado: você não pode cancelar a reserva de outro usuário.");
+
+       if (reserva.getStatus() != ReservaStatus.CONFIRMADA)
+           throw new RegraNegocioException("Só é possível cancelar reservas com status CONFIRMADA.");
+
+       reserva.setStatus(ReservaStatus.CANCELADA);
+       reserva.setMotivoCancelamento("CANCELADO MANUALMENTE");
+       reservaRepository.save(reserva);
+   }
 
     @Scheduled(fixedRate = 30000)
     @Transactional

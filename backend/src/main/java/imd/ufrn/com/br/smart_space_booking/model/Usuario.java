@@ -1,7 +1,10 @@
 package imd.ufrn.com.br.smart_space_booking.model;
 
+import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,6 +27,10 @@ public class Usuario {
     @Column(name = "trust_score")
     private Integer trustScore = 100;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UsuarioStatus status = UsuarioStatus.ATIVO;
+
     private String perfil = "USER";
 
     public Usuario() {}
@@ -45,6 +52,9 @@ public class Usuario {
 
     public Integer getTrustScore() { return trustScore; }
     public void setTrustScore(Integer trustScore) { this.trustScore = trustScore; }
+
+    public UsuarioStatus getStatus() { return status; }
+    public void setStatus(UsuarioStatus status) { this.status = status; }
 
     public String getPerfil() { return perfil; }
     public void setPerfil(String perfil) { this.perfil = perfil; }
