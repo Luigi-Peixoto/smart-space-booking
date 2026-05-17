@@ -1,13 +1,30 @@
 package imd.ufrn.com.br.smart_space_booking.model;
 
-import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
-import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
-import jakarta.persistence.*;
-import lombok.*;
+import java.time.ZonedDateTime;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.ZonedDateTime;
+import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
+import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -43,6 +60,9 @@ public class Reserva {
 
     @Column(name = "motivo_cancelamento")
     private String motivoCancelamento;
+
+    @Column(name = "data_hora_cancelamento")
+    private ZonedDateTime dataHoraCancelamento;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

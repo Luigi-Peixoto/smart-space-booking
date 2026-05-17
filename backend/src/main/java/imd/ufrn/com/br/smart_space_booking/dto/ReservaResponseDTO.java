@@ -1,10 +1,10 @@
 package imd.ufrn.com.br.smart_space_booking.dto;
 
+import java.time.ZonedDateTime;
+
 import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
 import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
 import imd.ufrn.com.br.smart_space_booking.model.Reserva;
-
-import java.time.ZonedDateTime;
 
 public record ReservaResponseDTO(
         Long id,
@@ -18,6 +18,7 @@ public record ReservaResponseDTO(
         ZonedDateTime dataHoraCheckin,
         ZonedDateTime dataHoraCheckout,
         String motivoCancelamento,
+        ZonedDateTime dataHoraCancelamento,
         ZonedDateTime createdAt,
         ZonedDateTime updatedAt
 ) {
@@ -34,6 +35,7 @@ public record ReservaResponseDTO(
                 reserva.getDataHoraCheckin(),
                 reserva.getDataHoraCheckout(),
                 reserva.getMotivoCancelamento(),
+                reserva.getDataHoraCancelamento(),
                 reserva.getCreatedAt(),
                 reserva.getUpdatedAt()
         );

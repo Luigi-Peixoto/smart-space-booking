@@ -1,12 +1,16 @@
 package imd.ufrn.com.br.smart_space_booking.repository;
 
-import imd.ufrn.com.br.smart_space_booking.model.Reserva;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.ZonedDateTime;
-import java.util.List;
+import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
+import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
+import imd.ufrn.com.br.smart_space_booking.model.Reserva;
 
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
@@ -31,6 +35,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("inicio") ZonedDateTime inicio,
             @Param("fim") ZonedDateTime fim
     );
+
+    Optional<Reserva> findBySalaIdAndInicioDateTimeAndTipo(Long salaId, ZonedDateTime inicioDateTime, ReservaTipo tipo);
+
+    long countByUsuarioIdAndStatusAndDataHoraCancelamento(Long usuarioId, ReservaStatus status, ZonedDateTime dataLimite);
 
     @Query("SELECT r FROM Reserva r WHERE r.usuario.id = :usuarioId " +
             "AND r.tipo <> 'MANUTENCAO' " +

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AuthContext } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "../../App.css";
 import { cadastrarSala } from "../../services/api";
@@ -8,6 +9,7 @@ import "./CadastroSala.css";
 
 function CadastroSala() {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -62,7 +64,7 @@ function CadastroSala() {
         imagens: imageIDs,
       };
 
-      await cadastrarSala(dadosParaEnviar);
+      await cadastrarSala(dadosParaEnviar, user.id);
 
       alert("Sala cadastrada com sucesso!");
       navigate("/admin");

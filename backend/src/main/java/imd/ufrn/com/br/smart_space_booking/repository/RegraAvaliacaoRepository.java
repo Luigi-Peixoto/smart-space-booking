@@ -1,10 +1,13 @@
 package imd.ufrn.com.br.smart_space_booking.repository;
 
-import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
 
 public interface RegraAvaliacaoRepository extends JpaRepository<RegraAvaliacao, Long> {
     List<RegraAvaliacao> findAllByOrderByIdAsc();
+    Optional<RegraAvaliacao> findByNomeIgnoreCase(String nome);
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AuthContext } from "../../contexts/AuthContext";
 import { useNavigate, useParams } from 'react-router-dom';
 import { getSalaById, atualizarSala } from '../../services/api';
 import { uploadArquivo } from '../../services/apiFiles'; 
@@ -8,6 +9,7 @@ import '../../App.css';
 
 function EditarSala() {
   const { id } = useParams();
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false); 
@@ -78,7 +80,7 @@ function EditarSala() {
         imagens: idsImagensFinais
       };
 
-      await atualizarSala(id, dadosParaEnviar);
+      await atualizarSala(id, dadosParaEnviar, user.id);
       
       alert("Sala atualizada com sucesso!");
       navigate('/admin');

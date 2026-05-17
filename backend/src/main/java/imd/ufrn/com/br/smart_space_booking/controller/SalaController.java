@@ -48,16 +48,19 @@ public class SalaController {
     }
 
     @PostMapping
-    public ResponseEntity<SalaResponseDTO> criar(@RequestBody Sala sala) {
+    public ResponseEntity<SalaResponseDTO> criar(
+            @RequestBody Sala sala,
+            @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
+        usuarioService.validarRole(userId, "ADMIN");
         SalaResponseDTO response = salaService.salvar(sala);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
-        usuarioService.validarDonoOuAdmin(userId, userId);
+        usuarioService.validarRole(userId, "ADMIN");
         boolean excluido = salaService.deletar(id);
 
         if (excluido) {
@@ -68,7 +71,11 @@ public class SalaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SalaResponseDTO> atualizar(@PathVariable Long id, @RequestBody Sala sala) {
+    public ResponseEntity<SalaResponseDTO> atualizar(
+            @PathVariable Long id, 
+            @RequestBody Sala sala,
+            @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
+        usuarioService.validarRole(userId, "ADMIN");
         SalaResponseDTO response = salaService.atualizar(id, sala);
         return ResponseEntity.ok(response);
     }

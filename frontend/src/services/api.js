@@ -6,13 +6,25 @@ const api = axios.create({
 });
 
 export const loginUsuario = (dados) => api.post("/usuarios/acesso", dados);
+export const getUsuarioById = (id) => api.get(`/usuarios/${id}`);
 
 export const getSalas = () => api.get("/salas");
 export const getSalaById = (id) => api.get(`/salas/${id}`);
-export const deletarSala = (id) => api.delete(`/salas/${id}`);
-export const cadastrarSala = (salaData) => api.post("/salas", salaData);
-export const atualizarSala = (id, salaData) =>
-  api.put(`/salas/${id}`, salaData);
+export const deletarSala = (id, usuarioId) => api.delete(
+    `/salas/${id}`,
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
+export const cadastrarSala = (salaData, usuarioId) => api.post(
+    "/salas",
+    salaData,
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
+export const atualizarSala = (id, salaData, usuarioId) =>
+  api.put(
+    `/salas/${id}`,
+    salaData,
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
 
 export const criarReserva = (reservaData) => api.post("/reservas", reservaData);
 export const getReservasUsuario = (usuarioId) =>
@@ -24,10 +36,12 @@ export const getHorariosOcupados = (salaId, data) =>
     params: { salaId, data },
   });
 
-  // export const cancelarReserva = (reservaId, usuarioId) =>
-  // api.delete(`/reservas/${reservaId}/cancelar`, {
-  //   headers: { "X-Usuario-Id": usuarioId },
-  // });
+export const cancelarReserva = (reservaId, usuarioId, motivo) =>
+  api.put(
+    `/reservas/${reservaId}/cancelar`,
+    { motivo: motivo },
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
 
 export const fazerCheckIn = (reservaId, usuarioId, arquivos) => {
   const formData = new FormData();

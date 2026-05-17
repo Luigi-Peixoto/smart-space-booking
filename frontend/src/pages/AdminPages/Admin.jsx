@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AuthContext } from "../../contexts/AuthContext";
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { deletarSala, getSalas } from '../../services/api';
 import './Admin.css';
@@ -9,6 +10,7 @@ import imagemMockada from '../../assets/mockImagemSala.jpg';
 const FILE_SERVER_URL = import.meta.env.VITE_API_FILES_URL;
 
 function Admin() {
+  const { user } = useContext(AuthContext);
   const [salas, setSalas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
@@ -40,7 +42,7 @@ function Admin() {
 
   const handleDelete = async (id) => {
     try {
-      await deletarSala(id);
+      await deletarSala(id, user.id);
       alert("Sala removida com sucesso!");
       setSalas(prev => prev.filter(sala => sala.id !== id));
     } catch (error) {

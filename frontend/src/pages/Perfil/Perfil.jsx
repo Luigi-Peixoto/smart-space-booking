@@ -1,15 +1,19 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
-import { getReservasUsuario/*, cancelarReserva*/ } from "../../services/api";
+import { getReservasUsuario, cancelarReserva, getUsuarioById } from "../../services/api";
 import "./Perfil.css";
 
 function Perfil() {
-  const { user, logout } = useContext(AuthContext);
+  const { user, refreshUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [modalAberto, setModalAberto] = useState(false);
+  const [reservaParaCancelar, setReservaParaCancelar] = useState(null);
+  const [motivoCancelamento, setMotivoCancelamento] = useState(""); 
 
   const handleLogout = () => {
     logout();
@@ -102,21 +106,34 @@ function Perfil() {
     }
   }
 
-  async function cancelReserva(id) {
-    if (!window.confirm("Tem certeza que deseja cancelar esta reserva?")) return;
+  function abrirModalCancelamento(reserva) {
+    setReservaParaCancelar(reserva);
+    setMotivoCancelamento("");
+    setModalAberto(true);
+  }
+
+  async function confirmarCancelamento() {
+    if (!motivoCancelamento.trim()) {
+      alert("Por favor, informe um motivo para o cancelamento.");
+      return;
+    }
+    
     try {
-      //await cancelarReserva(id, user.id);
+      await cancelarReserva(reservaParaCancelar.id, user.id, motivoCancelamento);
+      setModalAberto(false);
       await carregarReservas();
+      await refreshUser();
     } catch (error) {
-      alert("Erro ao cancelar a reserva. Tente novamente.");
+      console.error(error);
+      alert("Erro ao cancelar a reserva. Verifique a conexão com o servidor.");
     }
   }
 
   function handleAcao(reserva) {
     switch (reserva.statusVisual) {
-      case "FAZER CHECK-IN":  navigate(`/checkin/${reserva.id}`); break;
+      case "FAZER CHECK-IN": navigate(`/checkin/${reserva.id}`); break;
       case "FAZER CHECK-OUT": navigate(`/checkout/${reserva.id}`); break;
-      case "CANCELAR":        cancelReserva(reserva.id); break;
+      case "CANCELAR": abrirModalCancelamento(reserva); break;
       default: break;
     }
   }
@@ -186,6 +203,41 @@ function Perfil() {
           )}
         </section>
       </main>
+      {modalAberto && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Cancelar Reserva</h3>
+            <p>Você está cancelando a reserva para <strong>{reservaParaCancelar?.sala}</strong> no dia {reservaParaCancelar?.data}.</p>
+            
+            <p className="modal-warning" style={{ fontSize: '12px', color: '#d9534f', marginTop: '10px' }}>
+              Atenção: Cancelamentos com menos de 2 horas de antecedência podem impactar a sua nota na plataforma.
+            </p>
+
+            <textarea 
+              placeholder="Descreva o motivo do cancelamento..."
+              value={motivoCancelamento}
+              onChange={(e) => setMotivoCancelamento(e.target.value)}
+              rows="4"
+              style={{ width: '100%', marginTop: '15px', padding: '10px', borderRadius: '4px' }}
+            />
+
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <button 
+                onClick={() => setModalAberto(false)}
+                style={{ padding: '8px 16px', background: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Voltar
+              </button>
+              <button 
+                onClick={confirmarCancelamento}
+                style={{ padding: '8px 16px', background: '#d9534f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
