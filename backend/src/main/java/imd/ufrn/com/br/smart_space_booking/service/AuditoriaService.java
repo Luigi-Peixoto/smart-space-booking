@@ -118,7 +118,7 @@ public class AuditoriaService {
 
         // Calcula e aplica o delta de Trust Score com base nas notas por critério
         int deltaAplicado = trustScoreService.aplicarDelta(
-                reserva.getUsuario().getId(), resultado.getCriterios());
+                reserva.getUsuario().getId(), resultado.getCriterios(), reserva);
 
         Auditoria auditoria = new Auditoria();
         auditoria.setReserva(reserva);

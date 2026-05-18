@@ -3,6 +3,8 @@ package imd.ufrn.com.br.smart_space_booking.config;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import imd.ufrn.com.br.smart_space_booking.model.*;
+import imd.ufrn.com.br.smart_space_booking.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -11,14 +13,6 @@ import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
 import imd.ufrn.com.br.smart_space_booking.enums.StatusSala;
 import imd.ufrn.com.br.smart_space_booking.enums.TipoSala;
 import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
-import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
-import imd.ufrn.com.br.smart_space_booking.model.Reserva;
-import imd.ufrn.com.br.smart_space_booking.model.Sala;
-import imd.ufrn.com.br.smart_space_booking.model.Usuario;
-import imd.ufrn.com.br.smart_space_booking.repository.RegraAvaliacaoRepository;
-import imd.ufrn.com.br.smart_space_booking.repository.ReservaRepository;
-import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
-import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -27,13 +21,16 @@ public class DataSeeder implements CommandLineRunner {
     private final SalaRepository salaRepository;
     private final ReservaRepository reservaRepository;
     private final RegraAvaliacaoRepository regraRepository;
+    private final TrustScoreHistoricoRepository trustScoreHistoricoRepository;
 
     public DataSeeder(UsuarioRepository usuarioRepository, SalaRepository salaRepository,
-                      ReservaRepository reservaRepository, RegraAvaliacaoRepository regraRepository) {
+                      ReservaRepository reservaRepository, RegraAvaliacaoRepository regraRepository,
+                      TrustScoreHistoricoRepository trustScoreHistoricoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.salaRepository = salaRepository;
         this.reservaRepository = reservaRepository;
         this.regraRepository = regraRepository;
+        this.trustScoreHistoricoRepository = trustScoreHistoricoRepository;
     }
 
     @Override
@@ -105,6 +102,16 @@ public class DataSeeder implements CommandLineRunner {
         reservaNormal.setStatus(ReservaStatus.CONFIRMADA);
 
         reservaRepository.save(reservaNormal);
+
+        TrustScoreHistorico historico = new TrustScoreHistorico();
+        historico.setUsuario(user1);
+        historico.setReserva(null);
+        historico.setRegra(null);
+        historico.setDelta(0);
+        historico.setScoreAnterior(100);
+        historico.setScorePosterior(100);
+        historico.setDescricao("Score inicial do usuário.");
+        trustScoreHistoricoRepository.save(historico);
 
         System.out.println("Database Seeder concluído com sucesso! Temos 2 usuários, 2 salas e 1 reserva inicial.");
     }

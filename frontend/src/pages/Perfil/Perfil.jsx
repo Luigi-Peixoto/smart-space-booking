@@ -1,7 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
-import { getReservasUsuario, cancelarReserva, getUsuarioById, reportarIncidente } from "../../services/api";
+import {
+  cancelarReserva,
+  getReservasUsuario,
+  reportarIncidente,
+} from "../../services/api";
+import PainelHistoricoScore from "./components/PainelHistoricoScore/PainelHistoricoScore";
 import "./Perfil.css";
 
 function Perfil() {
@@ -13,11 +18,13 @@ function Perfil() {
 
   const [modalAberto, setModalAberto] = useState(false);
   const [reservaParaCancelar, setReservaParaCancelar] = useState(null);
-  const [motivoCancelamento, setMotivoCancelamento] = useState(""); 
-  
+  const [motivoCancelamento, setMotivoCancelamento] = useState("");
+
   const [modalIncidenteAberto, setModalIncidenteAberto] = useState(false);
   const [salaParaIncidente, setSalaParaIncidente] = useState(null);
   const [descricaoIncidente, setDescricaoIncidente] = useState("");
+
+  const [painelScoreAberto, setPainelScoreAberto] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -73,13 +80,13 @@ function Perfil() {
         statusVisual = "CANCELAR";
       } else if (agora >= dataInicio && agora <= dataFim) {
         statusVisual = "FAZER CHECK-IN";
-      } 
+      }
     } else if (r.status === "EM_ANDAMENTO") {
       statusVisual = "FAZER CHECK-OUT";
     } else if (r.status === "ENCERRADA") {
       statusVisual = "CONCLUÍDA";
     } else if (r.status === "CANCELADA") {
-      if(r.motivoCancelamento === "NO_SHOW_AUTOMATICO") {
+      if (r.motivoCancelamento === "NO_SHOW_AUTOMATICO") {
         statusVisual = "EXPIRADA";
       } else {
         statusVisual = "CANCELADA";
@@ -101,13 +108,20 @@ function Perfil() {
 
   function getStatusClass(statusVisual) {
     switch (statusVisual) {
-      case "FAZER CHECK-IN":  return "status-checkin";
-      case "FAZER CHECK-OUT": return "status-checkout";
-      case "CANCELAR":        return "status-cancelar";
-      case "CONCLUÍDA":       return "status-concluida";
-      case "CANCELADA":       return "status-cancelada";
-      case "EXPIRADA":        return "status-cancelada";
-      default:                return "";
+      case "FAZER CHECK-IN":
+        return "status-checkin";
+      case "FAZER CHECK-OUT":
+        return "status-checkout";
+      case "CANCELAR":
+        return "status-cancelar";
+      case "CONCLUÍDA":
+        return "status-concluida";
+      case "CANCELADA":
+        return "status-cancelada";
+      case "EXPIRADA":
+        return "status-cancelada";
+      default:
+        return "";
     }
   }
 
@@ -122,9 +136,13 @@ function Perfil() {
       alert("Por favor, informe um motivo para o cancelamento.");
       return;
     }
-    
+
     try {
-      await cancelarReserva(reservaParaCancelar.id, user.id, motivoCancelamento);
+      await cancelarReserva(
+        reservaParaCancelar.id,
+        user.id,
+        motivoCancelamento,
+      );
       setModalAberto(false);
       await carregarReservas();
       await refreshUser();
@@ -147,8 +165,12 @@ function Perfil() {
     }
 
     try {
-      await reportarIncidente(salaParaIncidente.salaId, descricaoIncidente, user.id);
-      
+      await reportarIncidente(
+        salaParaIncidente.salaId,
+        descricaoIncidente,
+        user.id,
+      );
+
       alert("Problema reportado com sucesso! A administração foi notificada.");
       setModalIncidenteAberto(false);
     } catch (error) {
@@ -159,10 +181,17 @@ function Perfil() {
 
   function handleAcao(reserva) {
     switch (reserva.statusVisual) {
-      case "FAZER CHECK-IN": navigate(`/checkin/${reserva.id}`); break;
-      case "FAZER CHECK-OUT": navigate(`/checkout/${reserva.id}`); break;
-      case "CANCELAR": abrirModalCancelamento(reserva); break;
-      default: break;
+      case "FAZER CHECK-IN":
+        navigate(`/checkin/${reserva.id}`);
+        break;
+      case "FAZER CHECK-OUT":
+        navigate(`/checkout/${reserva.id}`);
+        break;
+      case "CANCELAR":
+        abrirModalCancelamento(reserva);
+        break;
+      default:
+        break;
     }
   }
 
@@ -176,11 +205,19 @@ function Perfil() {
 
         <section className="user-card">
           <div className="user-details">
-            <h2 className="user-name">{user?.nome || "Usuário Desconhecido"}</h2>
+            <h2 className="user-name">
+              {user?.nome || "Usuário Desconhecido"}
+            </h2>
             <p className="user-email">{user?.email || "email@ssb-corp.com"}</p>
             <div className="trust-score-badge">
               <span className="score-label">TRUST SCORE:</span>
-              <span className="score-value">★ {user?.trustScore || 0}/100</span>
+              <button
+                className="score-value score-value--clicavel"
+                onClick={() => setPainelScoreAberto(true)}
+                title="Ver histórico"
+              >
+                ★ {user?.trustScore || 0}/100
+              </button>
             </div>
           </div>
           <button className="logout-button" onClick={handleLogout}>
@@ -197,7 +234,9 @@ function Perfil() {
           {loading ? (
             <p style={{ color: "#666" }}>Carregando reservas...</p>
           ) : reservas.length === 0 ? (
-            <p style={{ color: "#666" }}>Você ainda não possui reservas registradas.</p>
+            <p style={{ color: "#666" }}>
+              Você ainda não possui reservas registradas.
+            </p>
           ) : (
             <div className="reservations-list">
               {reservas.map((reserva) => (
@@ -211,10 +250,20 @@ function Perfil() {
                       <span>📅 {reserva.data}</span>
                       <span>🕒 {reserva.horario}</span>
                     </div>
-                    <button 
+                    <button
                       onClick={() => abrirModalIncidente(reserva)}
-                      style={{ marginTop: '10px', fontSize: '12px', background: 'none', border: 'none', color: '#d9534f', cursor: 'pointer', textDecoration: 'underline' }}
-                    >Reportar problema</button>
+                      style={{
+                        marginTop: "10px",
+                        fontSize: "12px",
+                        background: "none",
+                        border: "none",
+                        color: "#d9534f",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Reportar problema
+                    </button>
                   </div>
 
                   {isAcaoAtiva(reserva.statusVisual) ? (
@@ -225,7 +274,9 @@ function Perfil() {
                       {reserva.statusVisual} &gt;
                     </button>
                   ) : (
-                    <span className={`badge ${getStatusClass(reserva.statusVisual)}`}>
+                    <span
+                      className={`badge ${getStatusClass(reserva.statusVisual)}`}
+                    >
                       {reserva.statusVisual}
                     </span>
                   )}
@@ -239,30 +290,64 @@ function Perfil() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Cancelar Reserva</h3>
-            <p>Você está cancelando a reserva para <strong>{reservaParaCancelar?.sala}</strong> no dia {reservaParaCancelar?.data}.</p>
-            
-            <p className="modal-warning" style={{ fontSize: '12px', color: '#d9534f', marginTop: '10px' }}>
-              Atenção: Cancelamentos com menos de 2 horas de antecedência podem impactar a sua nota na plataforma.
+            <p>
+              Você está cancelando a reserva para{" "}
+              <strong>{reservaParaCancelar?.sala}</strong> no dia{" "}
+              {reservaParaCancelar?.data}.
             </p>
 
-            <textarea 
+            <p
+              className="modal-warning"
+              style={{ fontSize: "12px", color: "#d9534f", marginTop: "10px" }}
+            >
+              Atenção: Cancelamentos com menos de 2 horas de antecedência podem
+              impactar a sua nota na plataforma.
+            </p>
+
+            <textarea
               placeholder="Descreva o motivo do cancelamento..."
               value={motivoCancelamento}
               onChange={(e) => setMotivoCancelamento(e.target.value)}
               rows="4"
-              style={{ width: '100%', marginTop: '15px', padding: '10px', borderRadius: '4px' }}
+              style={{
+                width: "100%",
+                marginTop: "15px",
+                padding: "10px",
+                borderRadius: "4px",
+              }}
             />
 
-            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-              <button 
+            <div
+              className="modal-actions"
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+                marginTop: "20px",
+              }}
+            >
+              <button
                 onClick={() => setModalAberto(false)}
-                style={{ padding: '8px 16px', background: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                  padding: "8px 16px",
+                  background: "#ccc",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
               >
                 Voltar
               </button>
-              <button 
+              <button
                 onClick={confirmarCancelamento}
-                style={{ padding: '8px 16px', background: '#d9534f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                  padding: "8px 16px",
+                  background: "#d9534f",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
               >
                 Confirmar Cancelamento
               </button>
@@ -274,32 +359,67 @@ function Perfil() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Reportar Problema</h3>
-            <p>Descreva o problema encontrado na <strong>{salaParaIncidente?.sala}</strong>.</p>
-            
-            <textarea 
+            <p>
+              Descreva o problema encontrado na{" "}
+              <strong>{salaParaIncidente?.sala}</strong>.
+            </p>
+
+            <textarea
               placeholder="Ex: O ar condicionado não está ligando, ou a mesa está quebrada..."
               value={descricaoIncidente}
               onChange={(e) => setDescricaoIncidente(e.target.value)}
               rows="4"
-              style={{ width: '100%', marginTop: '15px', padding: '10px', borderRadius: '4px' }}
+              style={{
+                width: "100%",
+                marginTop: "15px",
+                padding: "10px",
+                borderRadius: "4px",
+              }}
             />
 
-            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-              <button 
+            <div
+              className="modal-actions"
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+                marginTop: "20px",
+              }}
+            >
+              <button
                 onClick={() => setModalIncidenteAberto(false)}
-                style={{ padding: '8px 16px', background: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                  padding: "8px 16px",
+                  background: "#ccc",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={confirmarReporteIncidente}
-                style={{ padding: '8px 16px', background: '#f0ad4e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                  padding: "8px 16px",
+                  background: "#f0ad4e",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
               >
                 Enviar Relatório
               </button>
             </div>
           </div>
         </div>
+      )}
+      {painelScoreAberto && (
+        <PainelHistoricoScore
+          usuarioId={user.id}
+          onFechar={() => setPainelScoreAberto(false)}
+        />
       )}
     </div>
   );

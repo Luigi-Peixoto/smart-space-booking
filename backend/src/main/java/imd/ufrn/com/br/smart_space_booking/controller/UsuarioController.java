@@ -2,6 +2,9 @@ package imd.ufrn.com.br.smart_space_booking.controller;
 
 import java.util.List;
 
+import imd.ufrn.com.br.smart_space_booking.dto.TrustScoreHistoricoResponseDTO;
+import imd.ufrn.com.br.smart_space_booking.model.TrustScoreHistorico;
+import imd.ufrn.com.br.smart_space_booking.service.TrustScoreService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,9 +29,12 @@ import imd.ufrn.com.br.smart_space_booking.service.UsuarioService;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final TrustScoreService trustScoreService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+
+    public UsuarioController(UsuarioService usuarioService, TrustScoreService trustScoreService) {
         this.usuarioService = usuarioService;
+        this.trustScoreService = trustScoreService;
     }
 
     @PostMapping("/acesso")
@@ -45,6 +51,11 @@ public class UsuarioController {
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.findById(id));
+    }
+
+    @GetMapping("/{id}/trust-score/historico")
+    public ResponseEntity<List<TrustScoreHistoricoResponseDTO>> buscarHistoricoTrustScore(@PathVariable Long id) {
+        return ResponseEntity.ok(trustScoreService.buscarHistorico(id));
     }
 
     @PostMapping

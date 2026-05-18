@@ -1,9 +1,14 @@
 package imd.ufrn.com.br.smart_space_booking.service;
 
 import imd.ufrn.com.br.smart_space_booking.dto.AvaliacaoCriterioDTO;
+import imd.ufrn.com.br.smart_space_booking.dto.TrustScoreHistoricoResponseDTO;
+import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
 import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
+import imd.ufrn.com.br.smart_space_booking.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.model.TrustScoreHistorico;
 import imd.ufrn.com.br.smart_space_booking.model.Usuario;
 import imd.ufrn.com.br.smart_space_booking.repository.RegraAvaliacaoRepository;
+import imd.ufrn.com.br.smart_space_booking.repository.TrustScoreHistoricoRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -20,62 +25,106 @@ public class TrustScoreService {
 
     private final RegraAvaliacaoRepository regraRepository;
     private final UsuarioRepository usuarioRepository;
+    private final TrustScoreHistoricoRepository historicoRepository;
 
     public TrustScoreService(RegraAvaliacaoRepository regraRepository,
-                             UsuarioRepository usuarioRepository) {
+                             UsuarioRepository usuarioRepository,
+                             TrustScoreHistoricoRepository historicoRepository) {
         this.regraRepository = regraRepository;
         this.usuarioRepository = usuarioRepository;
+        this.historicoRepository = historicoRepository;
     }
 
+    /**
+     * Aplica uma alteração no TrustScore e registra no histórico.
+     *
+     * @param usuario   Usuário afetado — obrigatório
+     * @param delta     Variação positiva (bônus) ou negativa (penalidade) — obrigatório
+     * @param regra     Regra que originou a alteração — null se não houver
+     * @param reserva   Reserva relacionada — null se não houver
+     * @param descricao Contexto adicional — null se não houver
+     */
     @Transactional
-    public int aplicarDelta(Long usuarioId, List<AvaliacaoCriterioDTO> criteriosAvaliados) {
-        if (criteriosAvaliados == null || criteriosAvaliados.isEmpty()) {
-            return 0;
+    public void registrarAlteracao(Usuario usuario, int delta, RegraAvaliacao regra,
+                                   Reserva reserva, String descricao) {
+        int scoreAnterior = usuario.getTrustScore() != null ? usuario.getTrustScore() : SCORE_MAXIMO;
+        int scorePosterior = clamp(scoreAnterior + delta, SCORE_MINIMO, SCORE_MAXIMO);
+
+        usuario.setTrustScore(scorePosterior);
+        if (scorePosterior == SCORE_MINIMO) {
+            usuario.setStatus(UsuarioStatus.SUSPENSO);
         }
+        usuarioRepository.save(usuario);
+
+        TrustScoreHistorico historico = new TrustScoreHistorico();
+        historico.setUsuario(usuario);
+        historico.setReserva(reserva);
+        historico.setRegra(regra);
+        historico.setDelta(delta);
+        historico.setScoreAnterior(scoreAnterior);
+        historico.setScorePosterior(scorePosterior);
+        historico.setDescricao(descricao);
+        historicoRepository.save(historico);
+    }
+
+    /**
+     * Aplica deltas a partir de uma lista de critérios avaliados com notas.
+     * Chama registrarAlteracao para cada critério que gerou alteração.
+     * Uso principal: checkout via IA.
+     *
+     * @param usuarioId          ID do usuário afetado
+     * @param criteriosAvaliados Lista de critérios com notas
+     * @param reserva            Reserva relacionada — null se não houver
+     * @return delta total aplicado
+     */
+    @Transactional
+    public int aplicarDelta(Long usuarioId, List<AvaliacaoCriterioDTO> criteriosAvaliados, Reserva reserva) {
+        if (criteriosAvaliados == null || criteriosAvaliados.isEmpty()) return 0;
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + usuarioId));
 
         Map<Long, RegraAvaliacao> regrasById = regraRepository.findAll()
                 .stream()
                 .collect(Collectors.toMap(RegraAvaliacao::getId, r -> r));
 
-        int deltaTotal = calcularDeltaTotal(criteriosAvaliados, regrasById);
+        int deltaTotal = 0;
 
-        if (deltaTotal == 0) {
-            return 0;
+        for (AvaliacaoCriterioDTO avaliado : criteriosAvaliados) {
+            if (avaliado.getId() == null || avaliado.getNota() == null) continue;
+
+            RegraAvaliacao regra = regrasById.get(avaliado.getId());
+            if (regra == null) continue;
+
+            int nota = clamp(avaliado.getNota(), 0, 10);
+            int delta = 0;
+            String descricao = null;
+
+            if (nota >= regra.getLimiBonus()) {
+                delta = regra.getDeltaBonus();
+                descricao = "Bônus: " + regra.getNome() + " (nota " + nota + ")";
+            } else if (nota < regra.getLimiPenalidade()) {
+                delta = regra.getDeltaPenalidade();
+                descricao = "Penalidade: " + regra.getNome() + " (nota " + nota + ")";
+            }
+
+            if (delta != 0) {
+                registrarAlteracao(usuario, delta, regra, reserva, descricao);
+                deltaTotal += delta;
+            }
         }
-
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + usuarioId));
-
-        int scoreAtual = usuario.getTrustScore() != null ? usuario.getTrustScore() : SCORE_MAXIMO;
-        int novoScore = clamp(scoreAtual + deltaTotal, SCORE_MINIMO, SCORE_MAXIMO);
-
-        usuario.setTrustScore(novoScore);
-        usuarioRepository.save(usuario);
 
         return deltaTotal;
     }
 
-    private int calcularDeltaTotal(List<AvaliacaoCriterioDTO> criterios,
-                                   Map<Long, RegraAvaliacao> regrasById) {
-        int total = 0;
-
-        for (AvaliacaoCriterioDTO avaliado : criterios) {
-            if (avaliado.getId() == null || avaliado.getNota() == null) continue;
-
-            RegraAvaliacao regra = regrasById.get(avaliado.getId());
-            if (regra == null) continue; // regra foi desativada/removida após a auditoria
-
-            int nota = clamp(avaliado.getNota(), 0, 10);
-
-            if (nota >= regra.getLimiBonus()) {
-                total += regra.getDeltaBonus();
-            } else if (nota < regra.getLimiPenalidade()) {
-                total += regra.getDeltaPenalidade(); // já é negativo
-            }
-            // zona neutra: não acumula nada
-        }
-
-        return total;
+    /**
+     * Retorna o histórico completo de um usuário, do mais recente ao mais antigo.
+     */
+    public List<TrustScoreHistoricoResponseDTO> buscarHistorico(Long usuarioId) {
+        return historicoRepository.findByUsuarioIdOrderByCriadoEmDesc(usuarioId)
+                .stream()
+                .map(TrustScoreHistoricoResponseDTO::fromEntity)
+                .toList();
     }
 
     private int clamp(int valor, int min, int max) {

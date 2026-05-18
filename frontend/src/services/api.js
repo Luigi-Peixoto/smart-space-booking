@@ -10,21 +10,12 @@ export const getUsuarioById = (id) => api.get(`/usuarios/${id}`);
 
 export const getSalas = () => api.get("/salas");
 export const getSalaById = (id) => api.get(`/salas/${id}`);
-export const deletarSala = (id, usuarioId) => api.delete(
-    `/salas/${id}`,
-    { headers: { "X-Usuario-Id": usuarioId } }
-  );
-export const cadastrarSala = (salaData, usuarioId) => api.post(
-    "/salas",
-    salaData,
-    { headers: { "X-Usuario-Id": usuarioId } }
-  );
+export const deletarSala = (id, usuarioId) =>
+  api.delete(`/salas/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
+export const cadastrarSala = (salaData, usuarioId) =>
+  api.post("/salas", salaData, { headers: { "X-Usuario-Id": usuarioId } });
 export const atualizarSala = (id, salaData, usuarioId) =>
-  api.put(
-    `/salas/${id}`,
-    salaData,
-    { headers: { "X-Usuario-Id": usuarioId } }
-  );
+  api.put(`/salas/${id}`, salaData, { headers: { "X-Usuario-Id": usuarioId } });
 
 export const criarReserva = (reservaData) => api.post("/reservas", reservaData);
 export const getReservasUsuario = (usuarioId) =>
@@ -40,7 +31,7 @@ export const cancelarReserva = (reservaId, usuarioId, motivo) =>
   api.put(
     `/reservas/${reservaId}/cancelar`,
     { motivo: motivo },
-    { headers: { "X-Usuario-Id": usuarioId } }
+    { headers: { "X-Usuario-Id": usuarioId } },
   );
 
 export const fazerCheckIn = (reservaId, usuarioId, arquivos) => {
@@ -48,7 +39,10 @@ export const fazerCheckIn = (reservaId, usuarioId, arquivos) => {
   arquivos.forEach((arquivo) => formData.append("imagens", arquivo));
 
   return api.post(`/auditorias/checkin/${reservaId}`, formData, {
-    headers: { "Content-Type": "multipart/form-data", "X-Usuario-Id": usuarioId },
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "X-Usuario-Id": usuarioId,
+    },
   });
 };
 
@@ -57,44 +51,45 @@ export const fazerCheckOut = (reservaId, usuarioId, arquivos) => {
   arquivos.forEach((arquivo) => formData.append("imagens", arquivo));
 
   return api.post(`/auditorias/checkout/${reservaId}`, formData, {
-    headers: { "Content-Type": "multipart/form-data", "X-Usuario-Id": usuarioId },
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "X-Usuario-Id": usuarioId,
+    },
   });
 };
 
-export const getRegras = (usuarioId) => api.get(
-    "/regras",
-    { headers: { "X-Usuario-Id": usuarioId } }
-  );
-export const criarRegra = (data, usuarioId) => api.post(
-    "/regras",
-    data,
-    { headers: { "X-Usuario-Id": usuarioId } }
-  );
-export const atualizarRegra = (id, data, usuarioId) => api.put(
-    `/regras/${id}`, 
-    data,
-    { headers: { "X-Usuario-Id": usuarioId } }
-  );
-export const deletarRegra = (id, usuarioId) => api.delete(
-    `/regras/${id}`,
-    { headers: { "X-Usuario-Id": usuarioId } }
-  );
+export const getRegras = (usuarioId) =>
+  api.get("/regras", { headers: { "X-Usuario-Id": usuarioId } });
+export const criarRegra = (data, usuarioId) =>
+  api.post("/regras", data, { headers: { "X-Usuario-Id": usuarioId } });
+export const atualizarRegra = (id, data, usuarioId) =>
+  api.put(`/regras/${id}`, data, { headers: { "X-Usuario-Id": usuarioId } });
+export const deletarRegra = (id, usuarioId) =>
+  api.delete(`/regras/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
 
 export const reportarIncidente = (salaId, descricao, usuarioId) =>
   api.post(
     "/incidentes",
     { salaId, descricao },
-    { headers: { "X-Usuario-Id": usuarioId } }
+    { headers: { "X-Usuario-Id": usuarioId } },
   );
 
-export const getIncidentesPendentes = (adminId) => 
+export const getIncidentesPendentes = (adminId) =>
   api.get("/incidentes/pendentes", { headers: { "X-Usuario-Id": adminId } });
 
-export const aprovarIncidente = (incidenteId, adminId) => 
-  api.patch(`/incidentes/${incidenteId}/aprovar`, {}, { headers: { "X-Usuario-Id": adminId } });
+export const aprovarIncidente = (incidenteId, adminId) =>
+  api.patch(
+    `/incidentes/${incidenteId}/aprovar`,
+    {},
+    { headers: { "X-Usuario-Id": adminId } },
+  );
 
-export const rejeitarIncidente = (incidenteId, adminId) => 
-  api.patch(`/incidentes/${incidenteId}/rejeitar`, {}, { headers: { "X-Usuario-Id": adminId } });
+export const rejeitarIncidente = (incidenteId, adminId) =>
+  api.patch(
+    `/incidentes/${incidenteId}/rejeitar`,
+    {},
+    { headers: { "X-Usuario-Id": adminId } },
+  );
 
 export const uploadArquivo = (arquivo) => {
   const formData = new FormData();
@@ -103,5 +98,8 @@ export const uploadArquivo = (arquivo) => {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
+
+export const getTrustScoreHistorico = (usuarioId) =>
+  api.get(`/usuarios/${usuarioId}/trust-score/historico`);
 
 export default api;

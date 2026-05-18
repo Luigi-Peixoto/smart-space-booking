@@ -1,7 +1,8 @@
 .perfil-container {
   background-color: #f4f6f8;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .perfil-header {
@@ -10,7 +11,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 40px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .header-logo {
@@ -64,7 +65,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   margin-bottom: 40px;
 }
 
@@ -142,7 +143,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   border-left: 6px solid #ccc;
 }
 
@@ -160,11 +161,21 @@
 }
 
 /* STATUS COLORS & BADGES */
-.reservation-card.status-checkin    { border-left-color: #1976d2; }
-.reservation-card.status-checkout   { border-left-color: var(--primary-color); }
-.reservation-card.status-cancelar   { border-left-color: black; }
-.reservation-card.status-concluida  { border-left-color: #9e9e9e; }
-.reservation-card.status-cancelada  { border-left-color: #d32f2f; }
+.reservation-card.status-checkin {
+  border-left-color: #1976d2;
+}
+.reservation-card.status-checkout {
+  border-left-color: var(--primary-color);
+}
+.reservation-card.status-cancelar {
+  border-left-color: black;
+}
+.reservation-card.status-concluida {
+  border-left-color: #9e9e9e;
+}
+.reservation-card.status-cancelada {
+  border-left-color: #d32f2f;
+}
 
 .badge {
   padding: 8px 16px;
@@ -178,26 +189,54 @@
 /* Botões de ação (clicáveis) */
 button.badge {
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
 }
-button.badge:hover { opacity: 0.85; }
+button.badge:hover {
+  opacity: 0.85;
+}
 
 /* Check-in */
-button.badge.status-checkin { background-color: #e3f2fd; color: #1976d2; }
-button.badge.status-checkin:hover { background-color: #bbdefb; }
+button.badge.status-checkin {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+button.badge.status-checkin:hover {
+  background-color: #bbdefb;
+}
 
 /* Checkout */
-button.badge.status-checkout { background-color: #e8eaf6; color: var(--primary-color); }
-button.badge.status-checkout:hover { background-color: #c9d1ff; }
+button.badge.status-checkout {
+  background-color: #e8eaf6;
+  color: var(--primary-color);
+}
+button.badge.status-checkout:hover {
+  background-color: #c9d1ff;
+}
 
 /* Cancelar reserva */
-button.badge.status-cancelar { background-color: #dadada; color: black; }
-button.badge.status-cancelar:hover { background-color: #afafaf; }
+button.badge.status-cancelar {
+  background-color: #dadada;
+  color: black;
+}
+button.badge.status-cancelar:hover {
+  background-color: #afafaf;
+}
 
 /* Badges estáticos */
-span.badge.status-concluida { background-color: #f5f5f5; color: #757575; }
-span.badge.status-cancelada { background-color: #ffebee; color: #c62828; }
-span.badge.status-expirada  { background-color: #ffebee; color: #c62828; }
+span.badge.status-concluida {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+span.badge.status-cancelada {
+  background-color: #ffebee;
+  color: #c62828;
+}
+span.badge.status-expirada {
+  background-color: #ffebee;
+  color: #c62828;
+}
 
 .modal-overlay {
   position: fixed;
@@ -219,4 +258,13 @@ span.badge.status-expirada  { background-color: #ffebee; color: #c62828; }
   width: 90%;
   max-width: 450px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.score-value--clicavel {
+  cursor: pointer;
+  transition: opacity 0.15s;
+  border: none;
+}
+.score-value--clicavel:hover {
+  opacity: 0.75;
 }
