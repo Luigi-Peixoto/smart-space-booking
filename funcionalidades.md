@@ -17,11 +17,11 @@ Este documento rastreia o progresso do desenvolvimento da plataforma, dividido p
 - [X] **UC01:** Acesso simplificado via e-mail corporativo (Tabela de usuários, login, Context API React)
 
 ### Sprint 2
-- [ ] **UC06:** Check-in visual com foto (Serviço de upload, interface de câmera/arquivo, timer de 10 min)
+- [X] **UC06:** Check-in visual com foto (Serviço de upload, interface de câmera/arquivo, timer de 10 min)
 
 ### Sprint 3
-- [ ] **UC05:** Cancelamento com penalidade no Trust Score (Lógica de prazo e aviso de penalidade)
-- [ ] **UC10:** Solicitar limpeza/manutenção (Bloqueio de sala e formulário de reporte)
+- [X] **UC05:** Cancelamento com penalidade no Trust Score (Lógica de prazo e aviso de penalidade)
+- [X] **UC10:** Solicitar limpeza/manutenção (Bloqueio de sala e formulário de reporte)
 
 ---
 
