@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext  } from 'react';
 import { AuthContext } from "../../contexts/AuthContext";
 import { useNavigate, useParams } from 'react-router-dom';
 import { getSalaById, atualizarSala } from '../../services/api';

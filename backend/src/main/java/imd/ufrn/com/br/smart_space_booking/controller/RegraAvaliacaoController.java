@@ -3,6 +3,7 @@ package imd.ufrn.com.br.smart_space_booking.controller;
 import imd.ufrn.com.br.smart_space_booking.dto.RegraAvaliacaoRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.RegraAvaliacaoResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.service.RegraAvaliacaoService;
+import imd.ufrn.com.br.smart_space_booking.service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +19,17 @@ import java.util.Map;
 public class RegraAvaliacaoController {
 
     private final RegraAvaliacaoService regraService;
+    private final UsuarioService usuarioService;
 
-    public RegraAvaliacaoController(RegraAvaliacaoService regraService) {
+    public RegraAvaliacaoController(RegraAvaliacaoService regraService, UsuarioService usuarioService) {
         this.regraService = regraService;
+        this.usuarioService = usuarioService;
     }
 
     @GetMapping
-    public ResponseEntity<List<RegraAvaliacaoResponseDTO>> listarRegras() {
+    public ResponseEntity<List<RegraAvaliacaoResponseDTO>> listarRegras(
+            @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
+        usuarioService.validarRole(userId, "ADMIN");
         List<RegraAvaliacaoResponseDTO> lista = regraService.listarTodas();
         return ResponseEntity.ok(lista);
     }
@@ -39,19 +44,26 @@ public class RegraAvaliacaoController {
      */
     @PostMapping
     public ResponseEntity<RegraAvaliacaoResponseDTO> criarRegra(
-            @RequestBody RegraAvaliacaoRequestDTO dto) {
+            @RequestBody RegraAvaliacaoRequestDTO dto,
+            @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
+        usuarioService.validarRole(userId, "ADMIN");
         return ResponseEntity.status(HttpStatus.CREATED).body(regraService.criar(dto));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RegraAvaliacaoResponseDTO> atualizarRegra(
             @PathVariable Long id,
-            @RequestBody RegraAvaliacaoRequestDTO dto) {
+            @RequestBody RegraAvaliacaoRequestDTO dto,
+            @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
+        usuarioService.validarRole(userId, "ADMIN");
         return ResponseEntity.ok(regraService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarRegra(@PathVariable Long id) {
+    public ResponseEntity<Void> deletarRegra(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
+        usuarioService.validarRole(userId, "ADMIN");
         regraService.deletar(id);
         return ResponseEntity.noContent().build();
     }

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from "../../contexts/AuthContext"; 
 import { useNavigate } from 'react-router-dom';
 import { getRegras, criarRegra, atualizarRegra, deletarRegra } from '../../services/api';
 import './Admin.css';
@@ -6,6 +7,7 @@ import './RegrasAvaliacao.css';
 
 function RegrasAvaliacao() {
   const navigate = useNavigate();
+  const {user} = useContext(AuthContext);
   const [regras, setRegras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
@@ -21,7 +23,7 @@ function RegrasAvaliacao() {
 
   async function carregarRegras() {
     try {
-      const res = await getRegras();
+      const res = await getRegras(user.id);
       setRegras(res.data);
     } catch (e) {
       alert('Erro ao carregar regras.');
@@ -61,9 +63,9 @@ function RegrasAvaliacao() {
     setSalvando(true);
     try {
       if (regraEditando) {
-        await atualizarRegra(regraEditando.id, form);
+        await atualizarRegra(regraEditando.id, form, user.id);
       } else {
-        await criarRegra(form);
+        await criarRegra(form, user.id);
       }
       await carregarRegras();
       setModalAberto(false);
@@ -77,7 +79,7 @@ function RegrasAvaliacao() {
   async function deletar(id) {
     if (!window.confirm('Remover esta regra permanentemente?')) return;
     try {
-      await deletarRegra(id);
+      await deletarRegra(id, user.id);
       setRegras(prev => prev.filter(r => r.id !== id));
     } catch {
       alert('Erro ao remover regra.');

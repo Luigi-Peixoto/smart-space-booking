@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
-import { getReservasUsuario, cancelarReserva, getUsuarioById } from "../../services/api";
+import { getReservasUsuario, cancelarReserva, getUsuarioById, reportarIncidente } from "../../services/api";
 import "./Perfil.css";
 
 function Perfil() {
@@ -14,6 +14,10 @@ function Perfil() {
   const [modalAberto, setModalAberto] = useState(false);
   const [reservaParaCancelar, setReservaParaCancelar] = useState(null);
   const [motivoCancelamento, setMotivoCancelamento] = useState(""); 
+  
+  const [modalIncidenteAberto, setModalIncidenteAberto] = useState(false);
+  const [salaParaIncidente, setSalaParaIncidente] = useState(null);
+  const [descricaoIncidente, setDescricaoIncidente] = useState("");
 
   const handleLogout = () => {
     logout();
@@ -84,6 +88,7 @@ function Perfil() {
 
     return {
       id: r.id,
+      salaId: r.salaId,
       sala: r.salaNome ? `Sala ${r.salaNome}` : `Sala #${r.salaId}`,
       data: dataFormatada,
       horario: `${horaInicio} - ${horaFim}`,
@@ -126,6 +131,29 @@ function Perfil() {
     } catch (error) {
       console.error(error);
       alert("Erro ao cancelar a reserva. Verifique a conexão com o servidor.");
+    }
+  }
+
+  function abrirModalIncidente(reserva) {
+    setSalaParaIncidente(reserva);
+    setDescricaoIncidente("");
+    setModalIncidenteAberto(true);
+  }
+
+  async function confirmarReporteIncidente() {
+    if (!descricaoIncidente.trim()) {
+      alert("Por favor, descreva o problema encontrado na sala.");
+      return;
+    }
+
+    try {
+      await reportarIncidente(salaParaIncidente.salaId, descricaoIncidente, user.id);
+      
+      alert("Problema reportado com sucesso! A administração foi notificada.");
+      setModalIncidenteAberto(false);
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao reportar o problema. Verifique a conexão.");
     }
   }
 
@@ -183,6 +211,10 @@ function Perfil() {
                       <span>📅 {reserva.data}</span>
                       <span>🕒 {reserva.horario}</span>
                     </div>
+                    <button 
+                      onClick={() => abrirModalIncidente(reserva)}
+                      style={{ marginTop: '10px', fontSize: '12px', background: 'none', border: 'none', color: '#d9534f', cursor: 'pointer', textDecoration: 'underline' }}
+                    >Reportar problema</button>
                   </div>
 
                   {isAcaoAtiva(reserva.statusVisual) ? (
@@ -233,6 +265,37 @@ function Perfil() {
                 style={{ padding: '8px 16px', background: '#d9534f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
               >
                 Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {modalIncidenteAberto && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Reportar Problema</h3>
+            <p>Descreva o problema encontrado na <strong>{salaParaIncidente?.sala}</strong>.</p>
+            
+            <textarea 
+              placeholder="Ex: O ar condicionado não está ligando, ou a mesa está quebrada..."
+              value={descricaoIncidente}
+              onChange={(e) => setDescricaoIncidente(e.target.value)}
+              rows="4"
+              style={{ width: '100%', marginTop: '15px', padding: '10px', borderRadius: '4px' }}
+            />
+
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <button 
+                onClick={() => setModalIncidenteAberto(false)}
+                style={{ padding: '8px 16px', background: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmarReporteIncidente}
+                style={{ padding: '8px 16px', background: '#f0ad4e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Enviar Relatório
               </button>
             </div>
           </div>

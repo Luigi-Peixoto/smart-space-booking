@@ -61,10 +61,40 @@ export const fazerCheckOut = (reservaId, usuarioId, arquivos) => {
   });
 };
 
-export const getRegras = () => api.get("/regras");
-export const criarRegra = (data) => api.post("/regras", data);
-export const atualizarRegra = (id, data) => api.put(`/regras/${id}`, data);
-export const deletarRegra = (id) => api.delete(`/regras/${id}`);
+export const getRegras = (usuarioId) => api.get(
+    "/regras",
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
+export const criarRegra = (data, usuarioId) => api.post(
+    "/regras",
+    data,
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
+export const atualizarRegra = (id, data, usuarioId) => api.put(
+    `/regras/${id}`, 
+    data,
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
+export const deletarRegra = (id, usuarioId) => api.delete(
+    `/regras/${id}`,
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
+
+export const reportarIncidente = (salaId, descricao, usuarioId) =>
+  api.post(
+    "/incidentes",
+    { salaId, descricao },
+    { headers: { "X-Usuario-Id": usuarioId } }
+  );
+
+export const getIncidentesPendentes = (adminId) => 
+  api.get("/incidentes/pendentes", { headers: { "X-Usuario-Id": adminId } });
+
+export const aprovarIncidente = (incidenteId, adminId) => 
+  api.patch(`/incidentes/${incidenteId}/aprovar`, {}, { headers: { "X-Usuario-Id": adminId } });
+
+export const rejeitarIncidente = (incidenteId, adminId) => 
+  api.patch(`/incidentes/${incidenteId}/rejeitar`, {}, { headers: { "X-Usuario-Id": adminId } });
 
 export const uploadArquivo = (arquivo) => {
   const formData = new FormData();

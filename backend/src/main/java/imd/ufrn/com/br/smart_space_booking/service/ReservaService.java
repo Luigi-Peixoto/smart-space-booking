@@ -220,9 +220,18 @@ public class ReservaService {
                 reserva.setStatus(ReservaStatus.CANCELADA);
                 reserva.setMotivoCancelamento("NO_SHOW_AUTOMATICO");
                 reserva.setDataHoraCancelamento(ZonedDateTime.now());
+                reservaRepository.findBySalaIdAndInicioDateTimeAndTipo(
+                        reserva.getSala().getId(),
+                        reserva.getFimDateTime(),
+                        ReservaTipo.MANUTENCAO
+                ).ifPresent(manutencao -> {
+                    manutencao.setStatus(ReservaStatus.CANCELADA);
+                    reservaRepository.save(manutencao);
+                });
             }
             reservaRepository.saveAll(reservasExpiradas);
         }
+            
     }
 
     public List<HorarioOcupadoDTO> findOcupados(Long salaId, LocalDate data) {

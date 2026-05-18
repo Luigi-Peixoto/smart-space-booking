@@ -11,6 +11,7 @@
 .sala-image-container {
   width: 100%;
   height: 150px;
+  overflow: hidden;
   position: relative;
 }
 
@@ -91,4 +92,62 @@
   padding: 4px 8px;
   border-radius: 4px;
   text-transform: uppercase;
+}
+
+.sala-card.sala-manutencao {
+  border: 1px solid #d9534f;
+  box-shadow: 0 2px 8px rgba(217, 83, 79, 0.15);
+}
+
+.sala-card.sala-manutencao .sala-title {
+  color: #d9534f;
+}
+
+.sala-card.sala-manutencao .sala-image {
+  filter: grayscale(80%);
+}
+
+.manutencao-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(217, 83, 79, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  z-index: 2;
+}
+
+.manutencao-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.manutencao-text {
+  font-weight: bold;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.btn-primary:disabled {
+  background-color: #e0e0e0;
+  color: #888;
+  cursor: not-allowed;
+  box-shadow: none;
+  border: 1px solid #ccc;
+}
+
+.btn-primary:disabled:hover {
+  background-color: #e0e0e0;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 18px;
+  margin: 0 4px;
+  vertical-align: text-bottom;
 }
