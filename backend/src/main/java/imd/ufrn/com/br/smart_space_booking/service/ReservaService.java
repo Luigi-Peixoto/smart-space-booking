@@ -14,7 +14,6 @@ import imd.ufrn.com.br.smart_space_booking.dto.ReservaRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.ReservaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
 import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
-import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
 import imd.ufrn.com.br.smart_space_booking.exception.AcessoNegadoException;
 import imd.ufrn.com.br.smart_space_booking.exception.ConflitoHorarioException;
 import imd.ufrn.com.br.smart_space_booking.exception.RegraNegocioException;
@@ -33,16 +32,23 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ReservaService {
+
     private final ReservaRepository reservaRepository;
     private final UsuarioRepository usuarioRepository;
     private final SalaRepository salaRepository;
     private final RegraAvaliacaoRepository regraAvaliacaoRepository;
+    private final TrustScoreService trustScoreService;
 
-    public ReservaService(ReservaRepository reservaRepository, UsuarioRepository usuarioRepository,SalaRepository salaRepository, RegraAvaliacaoRepository regraAvaliacaoRepository) {
+    public ReservaService(ReservaRepository reservaRepository,
+                          UsuarioRepository usuarioRepository,
+                          SalaRepository salaRepository,
+                          RegraAvaliacaoRepository regraAvaliacaoRepository,
+                          TrustScoreService trustScoreService) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.salaRepository = salaRepository;
         this.regraAvaliacaoRepository = regraAvaliacaoRepository;
+        this.trustScoreService = trustScoreService;
     }
 
     @Transactional
@@ -155,49 +161,54 @@ public class ReservaService {
         reservaRepository.save(reserva);
     }
 
-   @Transactional
-   public void cancelarReserva(Long reservaId, Long usuarioLogadoId, String motivo) {
+    @Transactional
+    public void cancelarReserva(Long reservaId, Long usuarioLogadoId, String motivo) {
         Reserva reserva = reservaRepository.findById(reservaId)
-               .orElseThrow(() -> new ReservaNotFoundException("Reserva não encontrada com o ID: " + reservaId));
+                .orElseThrow(() -> new ReservaNotFoundException("Reserva não encontrada com o ID: " + reservaId));
 
         if (!reserva.getUsuario().getId().equals(usuarioLogadoId))
-           throw new AcessoNegadoException("Acesso negado: você não pode cancelar a reserva de outro usuário.");
+            throw new AcessoNegadoException("Acesso negado: você não pode cancelar a reserva de outro usuário.");
 
-        if (reserva.getStatus() != ReservaStatus.CONFIRMADA) throw new RegraNegocioException("Apenas reservas confirmadas podem ser canceladas.");
-
-        long horasDeAntecedencia = ChronoUnit.HOURS.between(ZonedDateTime.now(), reserva.getInicioDateTime());
-        Usuario usuario = reserva.getUsuario();
-        
-        if (horasDeAntecedencia < 2) {
-            
-            int pontosPenalidade = regraAvaliacaoRepository.findByNomeIgnoreCase("Cancelamento Tardio")
-                    .map(RegraAvaliacao::getDeltaPenalidade)
-                    .orElse(-10); 
-            
-            usuario.setTrustScore(Math.max(0, usuario.getTrustScore() + pontosPenalidade)); 
-            
-            if (usuario.getTrustScore() == 0) {
-                usuario.setStatus(UsuarioStatus.SUSPENSO);
-            }
-        }
+        if (reserva.getStatus() != ReservaStatus.CONFIRMADA)
+            throw new RegraNegocioException("Apenas reservas confirmadas podem ser canceladas.");
 
         reserva.setStatus(ReservaStatus.CANCELADA);
         reserva.setMotivoCancelamento(motivo);
         reserva.setDataHoraCancelamento(ZonedDateTime.now());
         reservaRepository.save(reserva);
 
+        Usuario usuario = reserva.getUsuario();
+        long horasDeAntecedencia = ChronoUnit.HOURS.between(ZonedDateTime.now(), reserva.getInicioDateTime());
+
+        // Penalidade por cancelamento tardio (menos de 2h de antecedência)
+        if (horasDeAntecedencia < 2) {
+            RegraAvaliacao regraTardio = regraAvaliacaoRepository
+                    .findByNomeIgnoreCase("Cancelamento Tardio")
+                    .orElse(null);
+
+            int delta = regraTardio != null ? regraTardio.getDeltaPenalidade() : -10;
+            String descricao = "Cancelamento com " + horasDeAntecedencia + "h de antecedência.";
+
+            trustScoreService.registrarAlteracao(usuario, delta, regraTardio, reserva, descricao);
+        }
+
         ZonedDateTime umaSemanaAtras = ZonedDateTime.now().minusDays(7);
-    
         long cancelamentosNaSemana = reservaRepository.countByUsuarioIdAndStatusAndDataHoraCancelamento(
                 usuario.getId(), ReservaStatus.CANCELADA, umaSemanaAtras);
 
         regraAvaliacaoRepository.findByNomeIgnoreCase("Excesso de Cancelamentos").ifPresent(regraExcesso -> {
             if (cancelamentosNaSemana > regraExcesso.getLimiPenalidade()) {
-                usuario.setTrustScore(Math.max(0, usuario.getTrustScore() + regraExcesso.getDeltaPenalidade()));
+                trustScoreService.registrarAlteracao(
+                        usuario,
+                        regraExcesso.getDeltaPenalidade(),
+                        regraExcesso,
+                        reserva,
+                        "Excesso de cancelamentos na semana (" + cancelamentosNaSemana + " cancelamentos)."
+                );
             }
         });
 
-       reservaRepository.findBySalaIdAndInicioDateTimeAndTipo(
+        reservaRepository.findBySalaIdAndInicioDateTimeAndTipo(
                 reserva.getSala().getId(),
                 reserva.getFimDateTime(),
                 ReservaTipo.MANUTENCAO
@@ -205,7 +216,7 @@ public class ReservaService {
             manutencao.setStatus(ReservaStatus.CANCELADA);
             reservaRepository.save(manutencao);
         });
-   }
+    }
 
     @Scheduled(fixedRate = 30000)
     @Transactional
@@ -220,6 +231,24 @@ public class ReservaService {
                 reserva.setStatus(ReservaStatus.CANCELADA);
                 reserva.setMotivoCancelamento("NO_SHOW_AUTOMATICO");
                 reserva.setDataHoraCancelamento(ZonedDateTime.now());
+
+                // Registra penalidade de no-show se houver usuário
+                if (reserva.getUsuario() != null) {
+                    RegraAvaliacao regraNoShow = regraAvaliacaoRepository
+                            .findByNomeIgnoreCase("No-Show")
+                            .orElse(null);
+
+                    int delta = regraNoShow != null ? regraNoShow.getDeltaPenalidade() : -15;
+
+                    trustScoreService.registrarAlteracao(
+                            reserva.getUsuario(),
+                            delta,
+                            regraNoShow,
+                            reserva,
+                            "Reserva cancelada automaticamente por no-show."
+                    );
+                }
+
                 reservaRepository.findBySalaIdAndInicioDateTimeAndTipo(
                         reserva.getSala().getId(),
                         reserva.getFimDateTime(),
@@ -231,7 +260,6 @@ public class ReservaService {
             }
             reservaRepository.saveAll(reservasExpiradas);
         }
-            
     }
 
     public List<HorarioOcupadoDTO> findOcupados(Long salaId, LocalDate data) {
@@ -241,7 +269,8 @@ public class ReservaService {
         return reservaRepository.findReservasPorSalaNoDia(salaId, inicioDia, fimDia)
                 .stream()
                 .map(HorarioOcupadoDTO::fromEntity)
-                .toList();}
+                .toList();
+    }
 
     public List<ReservaResponseDTO> findAll() {
         return reservaRepository.findAll()

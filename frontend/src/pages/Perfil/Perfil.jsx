@@ -6,6 +6,7 @@ import {
   getReservasUsuario,
   reportarIncidente,
 } from "../../services/api";
+import PainelAuditoria from "./components/PainelAuditoria/PainelAuditoria";
 import PainelHistoricoScore from "./components/PainelHistoricoScore/PainelHistoricoScore";
 import "./Perfil.css";
 
@@ -25,6 +26,7 @@ function Perfil() {
   const [descricaoIncidente, setDescricaoIncidente] = useState("");
 
   const [painelScoreAberto, setPainelScoreAberto] = useState(false);
+  const [painelAuditoriaReserva, setPainelAuditoriaReserva] = useState(null);
 
   const handleLogout = () => {
     logout();
@@ -136,7 +138,6 @@ function Perfil() {
       alert("Por favor, informe um motivo para o cancelamento.");
       return;
     }
-
     try {
       await cancelarReserva(
         reservaParaCancelar.id,
@@ -163,14 +164,12 @@ function Perfil() {
       alert("Por favor, descreva o problema encontrado na sala.");
       return;
     }
-
     try {
       await reportarIncidente(
         salaParaIncidente.salaId,
         descricaoIncidente,
         user.id,
       );
-
       alert("Problema reportado com sucesso! A administração foi notificada.");
       setModalIncidenteAberto(false);
     } catch (error) {
@@ -197,6 +196,9 @@ function Perfil() {
 
   const isAcaoAtiva = (statusVisual) =>
     ["FAZER CHECK-IN", "FAZER CHECK-OUT", "CANCELAR"].includes(statusVisual);
+
+  const temAuditoria = (status) =>
+    status === "EM_ANDAMENTO" || status === "ENCERRADA";
 
   return (
     <div className="perfil-container">
@@ -250,20 +252,24 @@ function Perfil() {
                       <span>📅 {reserva.data}</span>
                       <span>🕒 {reserva.horario}</span>
                     </div>
-                    <button
-                      onClick={() => abrirModalIncidente(reserva)}
-                      style={{
-                        marginTop: "10px",
-                        fontSize: "12px",
-                        background: "none",
-                        border: "none",
-                        color: "#d9534f",
-                        cursor: "pointer",
-                        textDecoration: "underline",
-                      }}
-                    >
-                      Reportar problema
-                    </button>
+
+                    <div className="reservation-links">
+                      <button
+                        onClick={() => abrirModalIncidente(reserva)}
+                        className="reserva-link reserva-link--problema"
+                      >
+                        Reportar problema
+                      </button>
+
+                      {temAuditoria(reserva.status) && (
+                        <button
+                          onClick={() => setPainelAuditoriaReserva(reserva)}
+                          className="reserva-link reserva-link--auditoria"
+                        >
+                          Ver auditoria
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {isAcaoAtiva(reserva.statusVisual) ? (
@@ -286,6 +292,8 @@ function Perfil() {
           )}
         </section>
       </main>
+
+      {/* Modal cancelamento */}
       {modalAberto && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -295,15 +303,12 @@ function Perfil() {
               <strong>{reservaParaCancelar?.sala}</strong> no dia{" "}
               {reservaParaCancelar?.data}.
             </p>
-
             <p
-              className="modal-warning"
               style={{ fontSize: "12px", color: "#d9534f", marginTop: "10px" }}
             >
               Atenção: Cancelamentos com menos de 2 horas de antecedência podem
               impactar a sua nota na plataforma.
             </p>
-
             <textarea
               placeholder="Descreva o motivo do cancelamento..."
               value={motivoCancelamento}
@@ -316,9 +321,7 @@ function Perfil() {
                 borderRadius: "4px",
               }}
             />
-
             <div
-              className="modal-actions"
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
@@ -355,6 +358,8 @@ function Perfil() {
           </div>
         </div>
       )}
+
+      {/* Modal incidente */}
       {modalIncidenteAberto && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -363,7 +368,6 @@ function Perfil() {
               Descreva o problema encontrado na{" "}
               <strong>{salaParaIncidente?.sala}</strong>.
             </p>
-
             <textarea
               placeholder="Ex: O ar condicionado não está ligando, ou a mesa está quebrada..."
               value={descricaoIncidente}
@@ -376,9 +380,7 @@ function Perfil() {
                 borderRadius: "4px",
               }}
             />
-
             <div
-              className="modal-actions"
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
@@ -415,10 +417,20 @@ function Perfil() {
           </div>
         </div>
       )}
+
+      {/* Painel histórico Trust Score */}
       {painelScoreAberto && (
         <PainelHistoricoScore
           usuarioId={user.id}
           onFechar={() => setPainelScoreAberto(false)}
+        />
+      )}
+
+      {/* Painel auditoria da reserva */}
+      {painelAuditoriaReserva && (
+        <PainelAuditoria
+          reserva={painelAuditoriaReserva}
+          onFechar={() => setPainelAuditoriaReserva(null)}
         />
       )}
     </div>

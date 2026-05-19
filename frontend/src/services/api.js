@@ -102,4 +102,7 @@ export const uploadArquivo = (arquivo) => {
 export const getTrustScoreHistorico = (usuarioId) =>
   api.get(`/usuarios/${usuarioId}/trust-score/historico`);
 
+export const getAuditoriasPorReserva = (reservaId) =>
+  api.get(`/auditorias/reserva/${reservaId}`);
+
 export default api;

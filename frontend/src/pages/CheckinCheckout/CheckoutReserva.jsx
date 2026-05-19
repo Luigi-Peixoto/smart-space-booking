@@ -1,16 +1,18 @@
-import { useState, useEffect, useContext } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { fazerCheckOut } from '../../services/api';
-import { AuthContext } from '../../contexts/AuthContext';
-import './CheckinReserva.css';
+import { useContext, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "../../contexts/AuthContext";
+import { fazerCheckOut } from "../../services/api";
+import "./CheckinReserva.css";
 
 const TEMPO_MINIMO_LOADING_MS = 2000;
-function esperar(ms) { return new Promise(r => setTimeout(r, ms)); }
+function esperar(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 function CheckoutReserva({ onClose }) {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user } = useContext(AuthContext);
+  const { user, refreshUser } = useContext(AuthContext);
 
   const [arquivos, setArquivos] = useState([]);
   const [previews, setPreviews] = useState([]);
@@ -22,20 +24,20 @@ function CheckoutReserva({ onClose }) {
     const selecionados = Array.from(e.target.files);
     if (!selecionados.length) return;
     setErro(null);
-    const novosPreviews = selecionados.map(arquivo => ({
+    const novosPreviews = selecionados.map((arquivo) => ({
       url: URL.createObjectURL(arquivo),
       nome: arquivo.name,
     }));
-    setArquivos(prev => [...prev, ...selecionados]);
-    setPreviews(prev => [...prev, ...novosPreviews]);
-    e.target.value = '';
+    setArquivos((prev) => [...prev, ...selecionados]);
+    setPreviews((prev) => [...prev, ...novosPreviews]);
+    e.target.value = "";
   }
 
   function removerImagem(index) {
     if (carregando) return;
     URL.revokeObjectURL(previews[index].url);
-    setArquivos(prev => prev.filter((_, i) => i !== index));
-    setPreviews(prev => prev.filter((_, i) => i !== index));
+    setArquivos((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
   }
 
   const handleSubmit = async (e) => {
@@ -43,7 +45,10 @@ function CheckoutReserva({ onClose }) {
     setErro(null);
 
     if (!arquivos.length) {
-      setErro({ tipo: 'geral', mensagem: 'Adicione pelo menos uma foto para confirmar o check-out.' });
+      setErro({
+        tipo: "geral",
+        mensagem: "Adicione pelo menos uma foto para confirmar o check-out.",
+      });
       return;
     }
 
@@ -54,33 +59,38 @@ function CheckoutReserva({ onClose }) {
         esperar(TEMPO_MINIMO_LOADING_MS),
       ]);
 
-      if (resultado.status === 'rejected') throw resultado.reason;
+      if (resultado.status === "rejected") throw resultado.reason;
 
+      await refreshUser();
       if (onClose) onClose();
       else navigate(-1);
     } catch (error) {
-      console.error('Erro no check-out:', error);
+      console.error("Erro no check-out:", error);
       const status = error.response?.status;
       const mensagemBackend = error.response?.data;
 
       // HTTP 422 = imagem inválida OU sala incorreta
       if (status === 422) {
-        previews.forEach(p => URL.revokeObjectURL(p.url));
+        previews.forEach((p) => URL.revokeObjectURL(p.url));
         setArquivos([]);
         setPreviews([]);
 
-        const tipoErro = mensagemBackend?.includes('sala reservada')
-          ? 'sala_incorreta'
-          : 'imagem_invalida';
+        const tipoErro = mensagemBackend?.includes("sala reservada")
+          ? "sala_incorreta"
+          : "imagem_invalida";
 
         setErro({
           tipo: tipoErro,
-          mensagem: mensagemBackend || 'As imagens não passaram na validação. Tente novamente.',
+          mensagem:
+            mensagemBackend ||
+            "As imagens não passaram na validação. Tente novamente.",
         });
       } else {
         setErro({
-          tipo: 'geral',
-          mensagem: mensagemBackend || 'Erro ao processar o check-out. Tente novamente.',
+          tipo: "geral",
+          mensagem:
+            mensagemBackend ||
+            "Erro ao processar o check-out. Tente novamente.",
         });
       }
     } finally {
@@ -89,10 +99,15 @@ function CheckoutReserva({ onClose }) {
   };
 
   useEffect(() => {
-    return () => previews.forEach(p => URL.revokeObjectURL(p.url));
+    return () => previews.forEach((p) => URL.revokeObjectURL(p.url));
   }, [previews]);
 
-  const iconeErro = erro?.tipo === 'sala_incorreta' ? '🏢' : erro?.tipo === 'imagem_invalida' ? '📷' : '⚠️';
+  const iconeErro =
+    erro?.tipo === "sala_incorreta"
+      ? "🏢"
+      : erro?.tipo === "imagem_invalida"
+        ? "📷"
+        : "⚠️";
 
   return (
     <div className="admin-container">
@@ -101,7 +116,9 @@ function CheckoutReserva({ onClose }) {
           <div className="checkin-loading-box">
             <div className="checkin-spinner" />
             <p>IA avaliando a sala...</p>
-            <span>Calculando Trust Score. Isso pode levar alguns segundos.</span>
+            <span>
+              Calculando Trust Score. Isso pode levar alguns segundos.
+            </span>
           </div>
         </div>
       )}
@@ -109,25 +126,36 @@ function CheckoutReserva({ onClose }) {
       <main className="admin-main">
         <div className="page-header">
           <h2 className="page-title">Check-out da Sala</h2>
-          <p>Fotografe o ambiente após o uso. A IA irá avaliar e atualizar seu Trust Score.</p>
+          <p>
+            Fotografe o ambiente após o uso. A IA irá avaliar e atualizar seu
+            Trust Score.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="checkin-form">
-
           {erro && (
-            <div className={`checkin-erro ${erro.tipo !== 'geral' ? 'checkin-erro--imagem' : 'checkin-erro--geral'}`}>
+            <div
+              className={`checkin-erro ${erro.tipo !== "geral" ? "checkin-erro--imagem" : "checkin-erro--geral"}`}
+            >
               <span className="checkin-erro-icone">{iconeErro}</span>
               <p>{erro.mensagem}</p>
             </div>
           )}
 
           <div
-            className={`checkin-upload-zona ${carregando ? 'checkin-upload-zona--desabilitada' : ''}`}
-            onClick={() => !carregando && document.getElementById('input-fotos-checkout').click()}
+            className={`checkin-upload-zona ${carregando ? "checkin-upload-zona--desabilitada" : ""}`}
+            onClick={() =>
+              !carregando &&
+              document.getElementById("input-fotos-checkout").click()
+            }
           >
-            <span className="material-icons checkin-upload-icone">add_a_photo</span>
+            <span className="material-icons checkin-upload-icone">
+              add_a_photo
+            </span>
             <p className="checkin-upload-texto">Clique para adicionar fotos</p>
-            <p className="checkin-upload-subtexto">JPG, PNG ou WEBP · Múltiplas imagens permitidas</p>
+            <p className="checkin-upload-subtexto">
+              JPG, PNG ou WEBP · Múltiplas imagens permitidas
+            </p>
             <input
               id="input-fotos-checkout"
               type="file"
@@ -136,7 +164,7 @@ function CheckoutReserva({ onClose }) {
               capture="environment"
               onChange={handleFileChange}
               disabled={carregando}
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
             />
           </div>
 
@@ -144,20 +172,28 @@ function CheckoutReserva({ onClose }) {
             <div className="checkin-previews">
               {previews.map((preview, index) => (
                 <div key={index} className="checkin-preview-item">
-                  <img src={preview.url} alt={preview.nome} className="checkin-preview-img" />
+                  <img
+                    src={preview.url}
+                    alt={preview.nome}
+                    className="checkin-preview-img"
+                  />
                   <button
                     type="button"
                     className="checkin-preview-remover"
                     onClick={() => removerImagem(index)}
                     disabled={carregando}
                     title="Remover imagem"
-                  >✕</button>
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
               {!carregando && (
                 <div
                   className="checkin-preview-adicionar"
-                  onClick={() => document.getElementById('input-fotos-checkout').click()}
+                  onClick={() =>
+                    document.getElementById("input-fotos-checkout").click()
+                  }
                   title="Adicionar mais imagens"
                 >
                   <span>+</span>
@@ -181,8 +217,8 @@ function CheckoutReserva({ onClose }) {
               disabled={carregando || !arquivos.length}
             >
               {carregando
-                ? 'Analisando...'
-                : `Confirmar Check-out${arquivos.length > 0 ? ` (${arquivos.length})` : ''}`}
+                ? "Analisando..."
+                : `Confirmar Check-out${arquivos.length > 0 ? ` (${arquivos.length})` : ""}`}
             </button>
           </div>
         </form>

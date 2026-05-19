@@ -19,11 +19,14 @@ import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final TrustScoreService trustScoreService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, TrustScoreService trustScoreService) {
         this.usuarioRepository = usuarioRepository;
+        this.trustScoreService = trustScoreService;
     }
 
+    @Transactional
     public UsuarioResponseDTO realizarAcesso(UsuarioLoginDTO loginDTO) {
         return usuarioRepository.findByEmail(loginDTO.email())
                 .map(usuario -> convertToDTO(usuario))
@@ -40,6 +43,7 @@ public class UsuarioService {
                     }
 
                     Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
+                    trustScoreService.registrarAlteracao(usuarioSalvo, 0, null, null, "Score inicial do usuário.");
                     return convertToDTO(usuarioSalvo);
                 });
     }
@@ -75,7 +79,9 @@ public class UsuarioService {
             usuario.setStatus(UsuarioStatus.ATIVO);
         }
 
-        return convertToDTO(usuarioRepository.save(usuario));
+        Usuario usuarioSalvo = usuarioRepository.save(usuario);
+        trustScoreService.registrarAlteracao(usuarioSalvo, 0, null, null, "Score inicial do usuário.");
+        return convertToDTO(usuarioSalvo);
     }
 
     @Transactional

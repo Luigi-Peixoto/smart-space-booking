@@ -268,3 +268,32 @@ span.badge.status-expirada {
 .score-value--clicavel:hover {
   opacity: 0.75;
 }
+.reservation-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.reserva-link {
+  font-size: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-family: inherit;
+}
+
+.reserva-link--problema {
+  color: #d9534f;
+}
+
+.reserva-link--auditoria {
+  color: #1c1854;
+  opacity: 0.7;
+}
+
+.reserva-link--problema:hover,
+.reserva-link--auditoria:hover {
+  opacity: 0.6;
+}

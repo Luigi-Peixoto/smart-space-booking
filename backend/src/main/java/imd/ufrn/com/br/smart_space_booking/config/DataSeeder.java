@@ -64,7 +64,7 @@ public class DataSeeder implements CommandLineRunner {
         // Populando Usuários
         Usuario admin = new Usuario();
         admin.setNome("Admin");
-        admin.setEmail("admin@admin.com.br");
+        admin.setEmail("admin@admin.com");
         admin.setPerfil("ADMIN");
         admin.setTrustScore(100);
         admin.setStatus(UsuarioStatus.ATIVO);
@@ -79,39 +79,39 @@ public class DataSeeder implements CommandLineRunner {
         usuarioRepository.saveAll(List.of(admin, user1));
 
         // Populando Salas
-        Sala salaReuniao = new Sala("Sala de Reunião Alpha", "Bloco A, 1º Andar", 
-                StatusSala.ATIVA, TipoSala.REUNIAO, 10, 
-                List.of("Projetor", "Ar Condicionado", "Quadro Branco"), 
-                List.of("url_imagem_alpha.jpg"));
-
-        Sala lab = new Sala("Laboratório de Informática", "Bloco B, Térreo", 
-                StatusSala.ATIVA, TipoSala.LABORATORIO, 30, 
-                List.of("30 Computadores", "Ar Condicionado", "Lousa Digital"), 
-                List.of("url_imagem_lab.jpg"));
-
-        salaRepository.saveAll(List.of(salaReuniao, lab));
+//        Sala salaReuniao = new Sala("Sala de Reunião Alpha", "Bloco A, 1º Andar",
+//                StatusSala.ATIVA, TipoSala.REUNIAO, 10,
+//                List.of("Projetor", "Ar Condicionado", "Quadro Branco"),
+//                List.of("url_imagem_alpha.jpg"));
+//
+//        Sala lab = new Sala("Laboratório de Informática", "Bloco B, Térreo",
+//                StatusSala.ATIVA, TipoSala.LABORATORIO, 30,
+//                List.of("30 Computadores", "Ar Condicionado", "Lousa Digital"),
+//                List.of("url_imagem_lab.jpg"));
+//
+//        salaRepository.saveAll(List.of(salaReuniao, lab));
 
         ZonedDateTime amanha = ZonedDateTime.now().plusDays(1);
         
-        Reserva reservaNormal = new Reserva();
-        reservaNormal.setSala(salaReuniao);
-        reservaNormal.setUsuario(user1);
-        reservaNormal.setInicioDateTime(amanha.withHour(14).withMinute(0));
-        reservaNormal.setFimDateTime(amanha.withHour(16).withMinute(0));
-        reservaNormal.setTipo(ReservaTipo.PADRAO);
-        reservaNormal.setStatus(ReservaStatus.CONFIRMADA);
+//        Reserva reservaNormal = new Reserva();
+//        reservaNormal.setSala(salaReuniao);
+//        reservaNormal.setUsuario(user1);
+//        reservaNormal.setInicioDateTime(amanha.withHour(14).withMinute(0));
+//        reservaNormal.setFimDateTime(amanha.withHour(16).withMinute(0));
+//        reservaNormal.setTipo(ReservaTipo.PADRAO);
+//        reservaNormal.setStatus(ReservaStatus.CONFIRMADA);
 
-        reservaRepository.save(reservaNormal);
+//        reservaRepository.save(reservaNormal);
 
-        TrustScoreHistorico historico = new TrustScoreHistorico();
-        historico.setUsuario(user1);
-        historico.setReserva(null);
-        historico.setRegra(null);
-        historico.setDelta(0);
-        historico.setScoreAnterior(100);
-        historico.setScorePosterior(100);
-        historico.setDescricao("Score inicial do usuário.");
-        trustScoreHistoricoRepository.save(historico);
+//        TrustScoreHistorico historico = new TrustScoreHistorico();
+//        historico.setUsuario(user1);
+//        historico.setReserva(null);
+//        historico.setRegra(null);
+//        historico.setDelta(0);
+//        historico.setScoreAnterior(100);
+//        historico.setScorePosterior(100);
+//        historico.setDescricao("Score inicial do usuário.");
+//        trustScoreHistoricoRepository.save(historico);
 
         System.out.println("Database Seeder concluído com sucesso! Temos 2 usuários, 2 salas e 1 reserva inicial.");
     }

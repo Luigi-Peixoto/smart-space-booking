@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useEffect, useState } from "react";
 import { getUsuarioById } from "../services/api";
 
 export const AuthContext = createContext();
@@ -16,11 +16,10 @@ export const AuthProvider = ({ children }) => {
       try {
         const response = await getUsuarioById(user.id);
         const usuarioAtualizado = response.data;
-        
         setUser(usuarioAtualizado);
-        localStorage.setItem("user", JSON.stringify(usuarioAtualizado));
+        localStorage.setItem("@SSB:user", JSON.stringify(usuarioAtualizado));
       } catch (error) {
-        console.error("Erro ao sincronizar dados do usuário com o back-end:", error);
+        console.error("Erro ao sincronizar dados do usuário:", error);
       } finally {
         setLoadingAuth(false);
       }
@@ -36,17 +35,19 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     setUser(userData);
 
-    localStorage.setItem('@SSB:user', JSON.stringify(userData));
+    localStorage.setItem("@SSB:user", JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
 
-    localStorage.removeItem('@SSB:user');
+    localStorage.removeItem("@SSB:user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, refreshUser, loadingAuth }}>
+    <AuthContext.Provider
+      value={{ user, setUser, login, logout, refreshUser, loadingAuth }}
+    >
       {children}
     </AuthContext.Provider>
   );
