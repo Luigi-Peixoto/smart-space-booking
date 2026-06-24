@@ -9,5 +9,5 @@ public record ReservaRequestDTO(
         ZonedDateTime fimDateTime,
         ReservaTipo tipo,
         Long usuarioId,
-        Long salaId
+        Long recursoId
 ) {}

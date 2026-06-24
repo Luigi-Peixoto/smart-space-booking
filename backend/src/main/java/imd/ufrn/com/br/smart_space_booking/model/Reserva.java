@@ -77,8 +77,8 @@ public class Reserva {
     private Usuario usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sala_id", nullable = false)
-    private Sala sala;
+    @JoinColumn(name = "recurso_id", nullable = false)
+    private Recurso recurso;
 
     @PrePersist
     protected void onCreate() {

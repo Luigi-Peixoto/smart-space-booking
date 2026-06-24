@@ -3,6 +3,7 @@ package imd.ufrn.com.br.smart_space_booking.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import imd.ufrn.com.br.smart_space_booking.service.ReservaSalaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,17 +21,17 @@ import org.springframework.web.bind.annotation.RestController;
 import imd.ufrn.com.br.smart_space_booking.dto.HorarioOcupadoDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.ReservaRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.ReservaResponseDTO;
-import imd.ufrn.com.br.smart_space_booking.service.ReservaService;
 import imd.ufrn.com.br.smart_space_booking.service.UsuarioService;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/reservas")
 public class ReservaController {
-    private final ReservaService reservaService;
+
+    private final ReservaSalaService reservaService;
     private final UsuarioService usuarioService;
 
-    public ReservaController(ReservaService reservaService, UsuarioService usuarioService) {
+    public ReservaController(ReservaSalaService reservaService, UsuarioService usuarioService) {
         this.reservaService = reservaService;
         this.usuarioService = usuarioService;
     }
