@@ -1,8 +1,8 @@
 package imd.ufrn.com.br.smart_space_booking.controller;
 
-
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import imd.ufrn.com.br.smart_space_booking.dto.SalaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
-import imd.ufrn.com.br.smart_space_booking.service.SalaService;
+import imd.ufrn.com.br.smart_space_booking.service.RecursoService;
 import imd.ufrn.com.br.smart_space_booking.service.UsuarioService;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -26,23 +26,24 @@ import imd.ufrn.com.br.smart_space_booking.service.UsuarioService;
 @RequestMapping("/salas")
 public class SalaController {
 
-    private final SalaService salaService;
+    private final RecursoService<Sala, SalaResponseDTO> recursoService;
     private final UsuarioService usuarioService;
 
-    public SalaController(SalaService salaService, UsuarioService usuarioService) {
-        this.salaService = salaService;
+    public SalaController(
+            @Qualifier("salaService") RecursoService<Sala, SalaResponseDTO> recursoService,
+            UsuarioService usuarioService) {
+        this.recursoService = recursoService;
         this.usuarioService = usuarioService;
     }
 
     @GetMapping
     public ResponseEntity<List<SalaResponseDTO>> listarTodas() {
-        List<SalaResponseDTO> salas = salaService.listarTodas();
-        return ResponseEntity.ok(salas);
+        return ResponseEntity.ok(recursoService.listarTodos());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SalaResponseDTO> buscarPorId(@PathVariable Long id) {
-        return salaService.buscarPorId(id)
+        return recursoService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -52,8 +53,7 @@ public class SalaController {
             @RequestBody Sala sala,
             @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
         usuarioService.validarRole(userId, "ADMIN");
-        SalaResponseDTO response = salaService.salvar(sala);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(recursoService.salvar(sala));
     }
 
     @DeleteMapping("/{id}")
@@ -61,23 +61,17 @@ public class SalaController {
             @PathVariable Long id,
             @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
         usuarioService.validarRole(userId, "ADMIN");
-        boolean excluido = salaService.deletar(id);
-
-        if (excluido) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return recursoService.deletar(id)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<SalaResponseDTO> atualizar(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestBody Sala sala,
             @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
         usuarioService.validarRole(userId, "ADMIN");
-        SalaResponseDTO response = salaService.atualizar(id, sala);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(recursoService.atualizar(id, sala));
     }
-
 }

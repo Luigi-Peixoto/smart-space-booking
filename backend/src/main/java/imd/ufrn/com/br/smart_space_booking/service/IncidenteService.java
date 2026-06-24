@@ -2,7 +2,7 @@ package imd.ufrn.com.br.smart_space_booking.service;
 
 import imd.ufrn.com.br.smart_space_booking.dto.IncidenteRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.IncidenteStatus;
-import imd.ufrn.com.br.smart_space_booking.enums.StatusSala;
+import imd.ufrn.com.br.smart_space_booking.enums.StatusRecurso;
 import imd.ufrn.com.br.smart_space_booking.exception.RegraNegocioException;
 import imd.ufrn.com.br.smart_space_booking.model.Incidente;
 import imd.ufrn.com.br.smart_space_booking.repository.IncidenteRepository;
@@ -55,7 +55,7 @@ public class IncidenteService {
         incidenteRepository.save(incidente);
     
         var sala = incidente.getSala();
-        sala.setStatus(StatusSala.MANUTENCAO); 
+        sala.setStatus(StatusRecurso.MANUTENCAO);
         salaRepository.save(sala);
         
         // Aqui no futuro poderia ter uma lógica para cancelar as reservas daquela sala

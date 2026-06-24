@@ -8,10 +8,6 @@ import imd.ufrn.com.br.smart_space_booking.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
-import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
-import imd.ufrn.com.br.smart_space_booking.enums.StatusSala;
-import imd.ufrn.com.br.smart_space_booking.enums.TipoSala;
 import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
 
 @Component

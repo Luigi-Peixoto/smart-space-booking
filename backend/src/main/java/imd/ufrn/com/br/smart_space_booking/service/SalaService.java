@@ -1,6 +1,7 @@
 package imd.ufrn.com.br.smart_space_booking.service;
 
 import imd.ufrn.com.br.smart_space_booking.dto.SalaResponseDTO;
+import imd.ufrn.com.br.smart_space_booking.exception.SalaNotFoundException;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
 import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class SalaService {
+public class SalaService implements RecursoService<Sala, SalaResponseDTO> {
 
     private final SalaRepository salaRepository;
 
@@ -17,42 +18,42 @@ public class SalaService {
         this.salaRepository = salaRepository;
     }
 
-    public List<SalaResponseDTO> listarTodas() {
+    @Override
+    public List<SalaResponseDTO> listarTodos() {
         return salaRepository.findAll()
                 .stream()
                 .map(this::convertToDTO)
                 .toList();
     }
 
+    @Override
     public Optional<SalaResponseDTO> buscarPorId(Long id) {
         return salaRepository.findById(id)
                 .map(this::convertToDTO);
     }
 
+    @Override
     public SalaResponseDTO salvar(Sala sala) {
-        Sala salaSalva = salaRepository.save(sala);
-        return convertToDTO(salaSalva);
+        return convertToDTO(salaRepository.save(sala));
     }
 
-    public SalaResponseDTO atualizar(Long id, Sala salaDadosNovos) {
+    @Override
+    public SalaResponseDTO atualizar(Long id, Sala dadosNovos) {
         return salaRepository.findById(id).map(salaExistente -> {
-
-            salaExistente.setNome(salaDadosNovos.getNome());
-            salaExistente.setCapacidade(salaDadosNovos.getCapacidade());
-            salaExistente.setLocal(salaDadosNovos.getLocal());
-            salaExistente.setStatus(salaDadosNovos.getStatus());
-            salaExistente.setTipoSala(salaDadosNovos.getTipoSala());
-            salaExistente.setCaracteristicas(salaDadosNovos.getCaracteristicas());
-            salaExistente.setImagens(salaDadosNovos.getImagens());
-            Sala salaAtualizada = salaRepository.save(salaExistente);
-            return convertToDTO(salaAtualizada);
-
-        }).orElseThrow(() -> new RuntimeException("Sala com ID " + id + " não encontrada!"));
+            salaExistente.setNome(dadosNovos.getNome());
+            salaExistente.setCapacidade(dadosNovos.getCapacidade());
+            salaExistente.setLocal(dadosNovos.getLocal());
+            salaExistente.setStatus(dadosNovos.getStatus());
+            salaExistente.setTipoSala(dadosNovos.getTipoSala());
+            salaExistente.setCaracteristicas(dadosNovos.getCaracteristicas());
+            salaExistente.setImagens(dadosNovos.getImagens());
+            return convertToDTO(salaRepository.save(salaExistente));
+        }).orElseThrow(() -> new SalaNotFoundException(id));
     }
 
+    @Override
     public boolean deletar(Long id) {
         return salaRepository.findById(id).map(sala -> {
-
             salaRepository.delete(sala);
             return true;
         }).orElse(false);
