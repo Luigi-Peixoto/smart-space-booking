@@ -19,6 +19,7 @@ import imd.ufrn.com.br.smart_space_booking.model.Usuario;
 import imd.ufrn.com.br.smart_space_booking.repository.RegraAvaliacaoRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.ReservaRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
+import imd.ufrn.com.br.smart_space_booking.strategy.TrustScoreStrategy;
 import jakarta.transaction.Transactional;
 
 public abstract class ReservaService {
@@ -37,12 +38,17 @@ public abstract class ReservaService {
         this.regraAvaliacaoRepository = regraAvaliacaoRepository;
         this.trustScoreService = trustScoreService;
     }
+    
 
     // ─── Métodos abstratos — cada hotspot implementa ──────────────────────────
 
     public abstract ReservaResponseDTO create(ReservaRequestDTO dto);
 
-    protected abstract long getJanelaLimiteCancelamentoEmHoras();
+    protected abstract TrustScoreStrategy getTrustScoreStrategy();
+
+    protected long getJanelaLimiteCancelamentoEmHoras() {
+        return getTrustScoreStrategy().getJanelaCancelamentoEmHoras();
+    }
 
     protected abstract void executarPosCancelamento(Reserva reserva);
 
@@ -137,7 +143,9 @@ public abstract class ReservaService {
                     .findByNomeIgnoreCase("Cancelamento Tardio")
                     .orElse(null);
 
-            int delta = regraTardio != null ? regraTardio.getDeltaPenalidade() : -10;
+            int delta = regraTardio != null 
+                ? regraTardio.getDeltaPenalidade() 
+                : getTrustScoreStrategy().getDeltaPadraoCancelamentoTardio();
             String descricao = "Cancelamento com " + horasDeAntecedencia + "h de antecedência.";
             trustScoreService.registrarAlteracao(usuario, delta, regraTardio, reserva, descricao);
         }
@@ -176,7 +184,9 @@ public abstract class ReservaService {
                             .findByNomeIgnoreCase("No-Show")
                             .orElse(null);
 
-                    int delta = regraNoShow != null ? regraNoShow.getDeltaPenalidade() : -15;
+                    int delta = regraNoShow != null 
+                        ? regraNoShow.getDeltaPenalidade() 
+                        : getTrustScoreStrategy().getDeltaPadraoNoShow();
                     trustScoreService.registrarAlteracao(reserva.getUsuario(), delta, regraNoShow,
                             reserva, "Reserva cancelada automaticamente por no-show.");
                 }

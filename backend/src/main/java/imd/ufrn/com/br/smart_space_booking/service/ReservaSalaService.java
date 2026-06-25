@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import imd.ufrn.com.br.smart_space_booking.dto.HorarioOcupadoDTO;
@@ -23,20 +24,29 @@ import imd.ufrn.com.br.smart_space_booking.repository.RegraAvaliacaoRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.ReservaRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
+import imd.ufrn.com.br.smart_space_booking.strategy.TrustScoreStrategy;
 import jakarta.transaction.Transactional;
 
 @Service
 public class ReservaSalaService extends ReservaService {
 
     private final SalaRepository salaRepository;
+    private final TrustScoreStrategy trustScoreStrategy;
 
     public ReservaSalaService(ReservaRepository reservaRepository,
                               UsuarioRepository usuarioRepository,
                               RegraAvaliacaoRepository regraAvaliacaoRepository,
                               TrustScoreService trustScoreService,
-                              SalaRepository salaRepository) {
+                              SalaRepository salaRepository,
+                              @Qualifier("trustScoreSala") TrustScoreStrategy trustScoreStrategy) {
         super(reservaRepository, usuarioRepository, regraAvaliacaoRepository, trustScoreService);
         this.salaRepository = salaRepository;
+        this.trustScoreStrategy = trustScoreStrategy;
+    }
+
+    @Override
+    protected TrustScoreStrategy getTrustScoreStrategy() {
+        return trustScoreStrategy;
     }
 
     @Override

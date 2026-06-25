@@ -136,7 +136,7 @@ public class AuditoriaService {
     // ─── Helpers privados ────────────────────────────────────────────────────
 
     private List<byte[]> buscarImagensReferencia(Reserva reserva) {
-        return reserva.getSala().getImagens().stream()
+        return reserva.getRecurso().getImagens().stream()
                 .map(mediaStorageClient::buscarImagem)
                 .toList();
     }
