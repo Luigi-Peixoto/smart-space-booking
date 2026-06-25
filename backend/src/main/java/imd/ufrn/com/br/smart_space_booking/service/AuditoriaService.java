@@ -7,13 +7,12 @@ import imd.ufrn.com.br.smart_space_booking.dto.AuditoriaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.AuditoriaResultadoDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.AuditoriaTipo;
 import imd.ufrn.com.br.smart_space_booking.exception.ImagemInvalidaException;
-import imd.ufrn.com.br.smart_space_booking.exception.SalaIncorretaException;
 import imd.ufrn.com.br.smart_space_booking.model.Auditoria;
 import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
 import imd.ufrn.com.br.smart_space_booking.model.Reserva;
-import imd.ufrn.com.br.smart_space_booking.prompts.AuditoriaPrompts;
 import imd.ufrn.com.br.smart_space_booking.repository.AuditoriaRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.ReservaRepository;
+import imd.ufrn.com.br.smart_space_booking.strategy.AuditoriaStrategy;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +30,7 @@ public class AuditoriaService {
     private final RegraAvaliacaoService regraAvaliacaoService;
     private final TrustScoreService trustScoreService;
     private final ObjectMapper objectMapper;
+    private final List<AuditoriaStrategy> estrategias;
 
     public AuditoriaService(GeminiClient geminiClient,
                             MediaStorageClient mediaStorageClient,
@@ -39,7 +39,8 @@ public class AuditoriaService {
                             ReservaService reservaService,
                             RegraAvaliacaoService regraAvaliacaoService,
                             TrustScoreService trustScoreService,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            List<AuditoriaStrategy> estrategias) {
         this.geminiClient = geminiClient;
         this.mediaStorageClient = mediaStorageClient;
         this.auditoriaRepository = auditoriaRepository;
@@ -48,6 +49,7 @@ public class AuditoriaService {
         this.regraAvaliacaoService = regraAvaliacaoService;
         this.trustScoreService = trustScoreService;
         this.objectMapper = objectMapper;
+        this.estrategias = estrategias;
     }
 
     public List<AuditoriaResponseDTO> findAll() {
@@ -71,14 +73,16 @@ public class AuditoriaService {
         Reserva reserva = buscarReserva(reservaId);
         validarAuditoriaInexistente(reservaId, AuditoriaTipo.CHECK_IN);
 
-        List<byte[]> imagensReferencia = buscarImagensReferencia(reserva);
-        // Check-in usa prompt fixo — sem critérios de nota
+        AuditoriaStrategy strategy = resolver(reserva);
+        validarQuantidadeImagens(strategy, imagens, imageIds);
+
+        // Check-in usa prompt fixo do hotspot — sem critérios de nota
+        List<byte[]> imagensReferencia = carregarReferencia(strategy, reserva);
         String respostaTexto = geminiClient.analisar(
-                AuditoriaPrompts.promptCheckIn(), imagensReferencia, imagens);
+                strategy.promptCheckIn(), imagensReferencia, imagens);
 
         AuditoriaResultadoDTO resultado = parsearResposta(respostaTexto);
-        validarImagemValida(resultado, imageIds);
-        validarSalaCorreta(resultado, imageIds);
+        validarResultado(strategy, resultado, imageIds);
 
         reservaService.registrarCheckin(reservaId);
 
@@ -104,15 +108,17 @@ public class AuditoriaService {
         Reserva reserva = buscarReserva(reservaId);
         validarAuditoriaInexistente(reservaId, AuditoriaTipo.CHECK_OUT);
 
-        List<RegraAvaliacao> regras = regraAvaliacaoService.buscarTodasParaPrompt();
-        String prompt = AuditoriaPrompts.promptCheckOut(regras);
+        AuditoriaStrategy strategy = resolver(reserva);
+        validarQuantidadeImagens(strategy, imagens, imageIds);
 
-        List<byte[]> imagensReferencia = buscarImagensReferencia(reserva);
+        List<RegraAvaliacao> regras = regraAvaliacaoService.buscarTodasParaPrompt();
+        String prompt = strategy.promptCheckOut(regras);
+
+        List<byte[]> imagensReferencia = carregarReferencia(strategy, reserva);
         String respostaTexto = geminiClient.analisar(prompt, imagensReferencia, imagens);
 
         AuditoriaResultadoDTO resultado = parsearResposta(respostaTexto);
-        validarImagemValida(resultado, imageIds);
-        validarSalaCorreta(resultado, imageIds);
+        validarResultado(strategy, resultado, imageIds);
 
         reservaService.registrarCheckout(reservaId);
 
@@ -133,13 +139,47 @@ public class AuditoriaService {
         return auditoriaRepository.save(auditoria);
     }
 
-    // ─── Helpers privados ────────────────────────────────────────────────────
+    // ─── Pontos variáveis: delegação à Strategy ──────────────────────────────
 
-    private List<byte[]> buscarImagensReferencia(Reserva reserva) {
-        return reserva.getRecurso().getImagens().stream()
+    /** Escolhe a estratégia de auditoria pelo tipo do recurso da reserva. */
+    private AuditoriaStrategy resolver(Reserva reserva) {
+        return estrategias.stream()
+                .filter(s -> s.suporta(reserva.getRecurso()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Nenhuma AuditoriaStrategy para o recurso: "
+                                + reserva.getRecurso().getClass().getSimpleName()));
+    }
+
+    private void validarQuantidadeImagens(AuditoriaStrategy strategy,
+                                          List<MultipartFile> imagens, List<String> imageIds) {
+        int esperado = strategy.imagensEsperadas().size();
+        int recebido = imagens != null ? imagens.size() : 0;
+        if (recebido != esperado) {
+            deletarImagens(imageIds);
+            throw new ImagemInvalidaException(
+                    "Esperado " + esperado + " imagem(ns) para este recurso, recebido " + recebido + ".");
+        }
+    }
+
+    private List<byte[]> carregarReferencia(AuditoriaStrategy strategy, Reserva reserva) {
+        return strategy.imagensReferencia(reserva).stream()
                 .map(mediaStorageClient::buscarImagem)
                 .toList();
     }
+
+    /** Aplica a validação de domínio do hotspot, centralizando a limpeza de imagens em caso de falha. */
+    private void validarResultado(AuditoriaStrategy strategy,
+                                  AuditoriaResultadoDTO resultado, List<String> imageIds) {
+        try {
+            strategy.validarResultado(resultado);
+        } catch (RuntimeException e) {
+            deletarImagens(imageIds);
+            throw e;
+        }
+    }
+
+    // ─── Infraestrutura fixa do template ─────────────────────────────────────
 
     private AuditoriaResultadoDTO parsearResposta(String textoResposta) {
         try {
@@ -169,24 +209,6 @@ public class AuditoriaService {
     private void validarAuditoriaInexistente(Long reservaId, AuditoriaTipo tipo) {
         if (auditoriaRepository.findByReservaIdAndTipo(reservaId, tipo).isPresent()) {
             throw new RuntimeException(tipo + " já realizado para a reserva: " + reservaId);
-        }
-    }
-
-    private void validarImagemValida(AuditoriaResultadoDTO resultado, List<String> imageIds) {
-        if (!resultado.isImagemValida()) {
-            deletarImagens(imageIds);
-            throw new ImagemInvalidaException(
-                    "As imagens enviadas não correspondem a um ambiente interno. " +
-                            "Por favor, fotografe a sala corretamente.");
-        }
-    }
-
-    private void validarSalaCorreta(AuditoriaResultadoDTO resultado, List<String> imageIds) {
-        if (!resultado.isSalaCorreta()) {
-            deletarImagens(imageIds);
-            throw new SalaIncorretaException(
-                    "A sala fotografada não corresponde à sala reservada. " +
-                            "Por favor, fotografe a sala correta.");
         }
     }
 

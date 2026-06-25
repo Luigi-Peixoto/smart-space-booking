@@ -28,8 +28,8 @@ public class AuditoriaResultadoDTO {
     @JsonProperty("imagemValida")
     private boolean imagemValida = true;
 
-    @JsonProperty("salaCorreta")
-    private boolean salaCorreta = true;
+    @JsonProperty("recursoCorreto")
+    private boolean recursoCorreto = true;
 
     private boolean aprovado;
 
