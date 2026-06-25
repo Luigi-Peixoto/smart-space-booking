@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_FILES_URL; 
+const BASE_URL = "http://localhost:8088/api/file-server/v1/files"; 
+console.log('FILE SERVER URL:', BASE_URL); // Adicione este log para verificar a URL
 
 const apiFiles = axios.create({
   baseURL: BASE_URL,

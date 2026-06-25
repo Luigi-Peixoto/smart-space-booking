@@ -1,18 +1,20 @@
 // strategy/auditoria/AuditoriaSalaStrategy.java
 package imd.ufrn.com.br.smart_space_booking.strategy;
 
+import java.util.List;
+
+import org.hibernate.Hibernate;
+import org.springframework.stereotype.Component;
+
 import imd.ufrn.com.br.smart_space_booking.dto.AuditoriaResultadoDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.TipoImagem;
 import imd.ufrn.com.br.smart_space_booking.exception.ImagemInvalidaException;
 import imd.ufrn.com.br.smart_space_booking.exception.SalaIncorretaException;
-import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
 import imd.ufrn.com.br.smart_space_booking.model.Recurso;
+import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
 import imd.ufrn.com.br.smart_space_booking.model.Reserva;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
 import imd.ufrn.com.br.smart_space_booking.prompts.SalaPromptTemplate;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 public class AuditoriaSalaStrategy implements AuditoriaStrategy {
@@ -25,7 +27,7 @@ public class AuditoriaSalaStrategy implements AuditoriaStrategy {
 
     @Override
     public boolean suporta(Recurso recurso) {
-        return recurso instanceof Sala;
+        return Hibernate.unproxy(recurso) instanceof Sala;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class AuditoriaSalaStrategy implements AuditoriaStrategy {
 
     @Override
     public List<String> imagensReferencia(Reserva reserva) {
-        Sala sala = (Sala) reserva.getRecurso();
+        Sala sala = (Sala) Hibernate.unproxy(reserva.getRecurso());
         return sala.getImagens();
     }
     @Override

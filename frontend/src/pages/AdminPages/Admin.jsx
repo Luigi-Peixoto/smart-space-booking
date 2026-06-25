@@ -7,7 +7,7 @@ import './RegrasAvaliacao.css';
 import '../../App.css';
 import imagemMockada from '../../assets/mockImagemSala.jpg';
 
-const FILE_SERVER_URL = import.meta.env.VITE_API_FILES_URL;
+const FILE_SERVER_URL = "http://localhost:8088/api/file-server/v1/files";
 
 function Admin() {
   const { user } = useContext(AuthContext);
@@ -146,12 +146,15 @@ function Admin() {
                     <div style={{ flex: '1 1 300px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                         <span className="material-icons" style={{ fontSize: '18px', color: '#555' }}>meeting_room</span>
-                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#222' }}>{incidente.sala.nome}</h3>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#222' }}>{incidente.recursoNome}</h3>
                       </div>
                       
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#666', fontSize: '14px' }}>
                         <span className="material-icons" style={{ fontSize: '16px' }}>person</span>
-                        <span>Reportado por: <strong>{incidente.usuario.nome}</strong> ({incidente.usuario.email})</span>
+                        <span>
+                          Reportado por: <strong>{incidente.usuarioNome}</strong>{" "}
+                          ({incidente.usuarioEmail})
+                        </span>
                       </div>
 
                       <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '6px', border: '1px solid #eee' }}>

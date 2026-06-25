@@ -67,12 +67,8 @@ export const atualizarRegra = (id, data, usuarioId) =>
 export const deletarRegra = (id, usuarioId) =>
   api.delete(`/regras/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
 
-export const reportarIncidente = (salaId, descricao, usuarioId) =>
-  api.post(
-    "/incidentes",
-    { salaId, descricao },
-    { headers: { "X-Usuario-Id": usuarioId } },
-  );
+export const reportarIncidente = (recursoId, descricao, usuarioId) =>
+  api.post("/incidentes", { recursoId, descricao }, { headers: { "X-Usuario-Id": usuarioId } });
 
 export const getIncidentesPendentes = (adminId) =>
   api.get("/incidentes/pendentes", { headers: { "X-Usuario-Id": adminId } });

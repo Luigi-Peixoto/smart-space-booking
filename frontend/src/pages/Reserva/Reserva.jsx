@@ -10,7 +10,7 @@ import {
 } from "../../services/api";
 import "./Reserva.css";
 
-const FILE_SERVER_URL = import.meta.env.VITE_API_FILES_URL;
+const FILE_SERVER_URL = "http://localhost:8088/api/file-server/v1/files";
 const USER_ID = 1;
 
 const getHoraAtual = () => {
@@ -130,7 +130,7 @@ export default function Reserva() {
 
     const reservaData = {
       usuarioId: userId,
-      salaId: id,
+      recursoId: Number(id),
       tipo: "PADRAO",
       inicioDateTime: buildZonedDateTime(data, inicio),
       fimDateTime: buildZonedDateTime(data, fim),

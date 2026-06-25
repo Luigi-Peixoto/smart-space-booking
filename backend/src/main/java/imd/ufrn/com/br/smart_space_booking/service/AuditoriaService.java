@@ -1,6 +1,12 @@
 package imd.ufrn.com.br.smart_space_booking.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import imd.ufrn.com.br.smart_space_booking.client.GeminiClient;
 import imd.ufrn.com.br.smart_space_booking.client.MediaStorageClient;
 import imd.ufrn.com.br.smart_space_booking.dto.AuditoriaResponseDTO;
@@ -14,10 +20,6 @@ import imd.ufrn.com.br.smart_space_booking.repository.AuditoriaRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.ReservaRepository;
 import imd.ufrn.com.br.smart_space_booking.strategy.AuditoriaStrategy;
 import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @Service
 public class AuditoriaService {

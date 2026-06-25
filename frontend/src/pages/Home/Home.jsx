@@ -7,7 +7,7 @@ import './Home.css';
 import SSBLogo from '../../assets/SSBLogo.png';
 import imagemMockada from '../../assets/mockImagemSala.jpg';
 
-const FILE_SERVER_URL = import.meta.env.VITE_API_FILES_URL;
+const FILE_SERVER_URL = "http://localhost:8088/api/file-server/v1/files";
 
 function Home() {
   const [salas, setSalas] = useState([]);
@@ -21,6 +21,8 @@ function Home() {
       try {
         const response = await getSalas();
         setSalas(response.data);
+
+        // console.log(sala.imagens);
       } catch (error) {
         console.error("Erro ao carregar salas:", error);
         alert("Não conseguimos carregar as salas no momento.");

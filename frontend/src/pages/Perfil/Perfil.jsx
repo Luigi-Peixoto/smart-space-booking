@@ -97,8 +97,10 @@ function Perfil() {
 
     return {
       id: r.id,
-      salaId: r.salaId,
-      sala: r.salaNome ? `Sala ${r.salaNome}` : `Sala #${r.salaId}`,
+      recursoId: r.recursoId,
+      sala: r.recursoNome
+        ? `Sala ${r.recursoNome}`
+        : `Sala #${r.recursoId}`,
       data: dataFormatada,
       horario: `${horaInicio} - ${horaFim}`,
       status: r.status,
@@ -166,7 +168,7 @@ function Perfil() {
     }
     try {
       await reportarIncidente(
-        salaParaIncidente.salaId,
+        salaParaIncidente.recursoId,
         descricaoIncidente,
         user.id,
       );

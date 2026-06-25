@@ -1,21 +1,18 @@
 package imd.ufrn.com.br.smart_space_booking.model;
 
-import imd.ufrn.com.br.smart_space_booking.enums.IncidenteStatus;
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import imd.ufrn.com.br.smart_space_booking.enums.IncidenteStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,8 +32,8 @@ public class Incidente {
     private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "sala_id", nullable = false)
-    private Sala sala;
+    @JoinColumn(name = "recurso_id", nullable = false)
+    private Recurso recurso; 
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)

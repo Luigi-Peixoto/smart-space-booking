@@ -76,7 +76,7 @@ public class Reserva {
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "recurso_id", nullable = false)
     private Recurso recurso;
 
