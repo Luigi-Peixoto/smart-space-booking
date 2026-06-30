@@ -4,13 +4,11 @@ import imd.ufrn.com.br.smart_space_booking.dto.SalaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.exception.SalaNotFoundException;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
 import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-
 @Service
-public class SalaService implements RecursoService<Sala, SalaResponseDTO> {
+public class SalaService extends RecursoService<Sala, SalaResponseDTO> {
 
     private final SalaRepository salaRepository;
 
@@ -19,47 +17,12 @@ public class SalaService implements RecursoService<Sala, SalaResponseDTO> {
     }
 
     @Override
-    public List<SalaResponseDTO> listarTodos() {
-        return salaRepository.findAll()
-                .stream()
-                .map(this::convertToDTO)
-                .toList();
+    protected JpaRepository<Sala, Long> getRepository() {
+        return salaRepository;
     }
 
     @Override
-    public Optional<SalaResponseDTO> buscarPorId(Long id) {
-        return salaRepository.findById(id)
-                .map(this::convertToDTO);
-    }
-
-    @Override
-    public SalaResponseDTO salvar(Sala sala) {
-        return convertToDTO(salaRepository.save(sala));
-    }
-
-    @Override
-    public SalaResponseDTO atualizar(Long id, Sala dadosNovos) {
-        return salaRepository.findById(id).map(salaExistente -> {
-            salaExistente.setNome(dadosNovos.getNome());
-            salaExistente.setCapacidade(dadosNovos.getCapacidade());
-            salaExistente.setLocal(dadosNovos.getLocal());
-            salaExistente.setStatus(dadosNovos.getStatus());
-            salaExistente.setTipoSala(dadosNovos.getTipoSala());
-            salaExistente.setCaracteristicas(dadosNovos.getCaracteristicas());
-            salaExistente.setImagens(dadosNovos.getImagens());
-            return convertToDTO(salaRepository.save(salaExistente));
-        }).orElseThrow(() -> new SalaNotFoundException(id));
-    }
-
-    @Override
-    public boolean deletar(Long id) {
-        return salaRepository.findById(id).map(sala -> {
-            salaRepository.delete(sala);
-            return true;
-        }).orElse(false);
-    }
-
-    private SalaResponseDTO convertToDTO(Sala sala) {
+    protected SalaResponseDTO convertToDTO(Sala sala) {
         return new SalaResponseDTO(
                 sala.getId(),
                 sala.getNome(),
@@ -69,5 +32,22 @@ public class SalaService implements RecursoService<Sala, SalaResponseDTO> {
                 sala.getStatus().toString(),
                 sala.getCaracteristicas(),
                 sala.getImagens());
+    }
+
+    @Override
+    protected Sala atualizarCampos(Sala existente, Sala dadosNovos) {
+        existente.setNome(dadosNovos.getNome());
+        existente.setCapacidade(dadosNovos.getCapacidade());
+        existente.setLocal(dadosNovos.getLocal());
+        existente.setStatus(dadosNovos.getStatus());
+        existente.setTipoSala(dadosNovos.getTipoSala());
+        existente.setCaracteristicas(dadosNovos.getCaracteristicas());
+        existente.setImagens(dadosNovos.getImagens());
+        return existente;
+    }
+
+    @Override
+    protected RuntimeException notFoundException(Long id) {
+        return new SalaNotFoundException(id);
     }
 }
