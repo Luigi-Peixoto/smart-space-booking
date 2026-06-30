@@ -89,11 +89,6 @@ public class ReservaSalaService extends ReservaService {
     }
 
     @Override
-    protected long getJanelaLimiteCancelamentoEmHoras() {
-        return 2;
-    }
-
-    @Override
     protected void executarPosCancelamento(Reserva reserva) {
         reservaRepository.findByRecursoIdAndInicioDateTimeAndTipo(
                 reserva.getRecurso().getId(),

@@ -1,20 +1,41 @@
 package imd.ufrn.com.br.smart_space_booking.strategy;
 
+import imd.ufrn.com.br.smart_space_booking.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.model.Usuario;
+import imd.ufrn.com.br.smart_space_booking.repository.RegraAvaliacaoRepository;
+import imd.ufrn.com.br.smart_space_booking.service.TrustScoreService;
+
 public interface TrustScoreStrategy {
 
     /**
      * Janela de antecedência mínima para cancelamento sem penalidade.
-     * 2h para salas, 6h para equipamentos, 24h para veículos.
+     * Ex: 2h para salas, 6h para equipamentos, 24h para veículos.
      */
     long getJanelaCancelamentoEmHoras();
 
     /**
-     * Delta aplicado quando RegraAvaliacao "No-Show" não existe no banco.
+     * Processa a penalidade de cancelamento tardio.
+     * Cada hotspot decide qual regra busca, o delta de fallback,
+     * a descrição e quaisquer ações adicionais.
      */
-    int getDeltaPadraoNoShow();
+    void processarCancelamentoTardio(Usuario usuario, Reserva reserva,
+                                     long horasDeAntecedencia,
+                                     RegraAvaliacaoRepository regraRepository,
+                                     TrustScoreService trustScoreService);
 
     /**
-     * Delta aplicado quando RegraAvaliacao "Cancelamento Tardio" não existe no banco.
+     * Processa a penalidade de no-show automático.
      */
-    int getDeltaPadraoCancelamentoTardio();
+    void processarNoShow(Usuario usuario, Reserva reserva,
+                         RegraAvaliacaoRepository regraRepository,
+                         TrustScoreService trustScoreService);
+
+    /**
+     * Processa a penalidade por excesso de cancelamentos na semana.
+     * Cada hotspot pode ter limiar diferente ou ignorar o evento.
+     */
+    void processarExcessoCancelamentos(Usuario usuario, Reserva reserva,
+                                       long totalCancelamentos,
+                                       RegraAvaliacaoRepository regraRepository,
+                                       TrustScoreService trustScoreService);
 }
