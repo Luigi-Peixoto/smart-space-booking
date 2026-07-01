@@ -35,6 +35,15 @@ public class TrustScoreService {
         this.historicoRepository = historicoRepository;
     }
 
+    /**
+     * Aplica uma alteração no TrustScore e registra no histórico.
+     *
+     * @param usuario   Usuário afetado — obrigatório
+     * @param delta     Variação positiva (bônus) ou negativa (penalidade) — obrigatório
+     * @param regra     Regra que originou a alteração — null se não houver
+     * @param reserva   Reserva relacionada — null se não houver
+     * @param descricao Contexto adicional — null se não houver
+     */
     @Transactional
     public void registrarAlteracao(Usuario usuario, int delta, RegraAvaliacao regra,
                                    Reserva reserva, String descricao) {
@@ -58,6 +67,16 @@ public class TrustScoreService {
         historicoRepository.save(historico);
     }
 
+    /**
+     * Aplica deltas a partir de uma lista de critérios avaliados com notas.
+     * Chama registrarAlteracao para cada critério que gerou alteração.
+     * Uso principal: checkout via IA.
+     *
+     * @param usuarioId          ID do usuário afetado
+     * @param criteriosAvaliados Lista de critérios com notas
+     * @param reserva            Reserva relacionada — null se não houver
+     * @return delta total aplicado
+     */
     @Transactional
     public int aplicarDelta(Long usuarioId, List<AvaliacaoCriterioDTO> criteriosAvaliados, Reserva reserva) {
         if (criteriosAvaliados == null || criteriosAvaliados.isEmpty()) return 0;
@@ -98,6 +117,9 @@ public class TrustScoreService {
         return deltaTotal;
     }
 
+    /**
+     * Retorna o histórico completo de um usuário, do mais recente ao mais antigo.
+     */
     public List<TrustScoreHistoricoResponseDTO> buscarHistorico(Long usuarioId) {
         return historicoRepository.findByUsuarioIdOrderByCriadoEmDesc(usuarioId)
                 .stream()
