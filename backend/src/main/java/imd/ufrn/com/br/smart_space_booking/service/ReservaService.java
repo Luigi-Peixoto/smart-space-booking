@@ -46,7 +46,7 @@ public abstract class ReservaService {
 
     protected abstract TrustScoreStrategy getTrustScoreStrategy();
 
-    protected long getJanelaLimiteCancelamentoEmHoras() {
+    private long getJanelaLimiteCancelamentoEmHoras() {
         return getTrustScoreStrategy().getJanelaCancelamentoEmHoras();
     }
 
