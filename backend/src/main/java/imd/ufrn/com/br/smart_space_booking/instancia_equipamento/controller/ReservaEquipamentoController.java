@@ -1,4 +1,4 @@
-package imd.ufrn.com.br.smart_space_booking.framework.controller;
+package imd.ufrn.com.br.smart_space_booking.instancia_equipamento.controller;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,32 +25,28 @@ import imd.ufrn.com.br.smart_space_booking.framework.service.UsuarioService;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/reservas")
-public class ReservaController {
-
-    /** Sala reserva um buffer pós-uso de 15min pra limpeza. */
-    private static final long BUFFER_LIMPEZA_MINUTOS = 15L;
+@RequestMapping("/reservas-equipamento")
+public class ReservaEquipamentoController {
 
     private final ReservaService reservaService;
     private final UsuarioService usuarioService;
 
-    public ReservaController(ReservaService reservaService, UsuarioService usuarioService) {
+    public ReservaEquipamentoController(ReservaService reservaService, UsuarioService usuarioService) {
         this.reservaService = reservaService;
         this.usuarioService = usuarioService;
     }
 
     @PostMapping
     public ResponseEntity<ReservaResponseDTO> create(@RequestBody ReservaRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.create(dto, BUFFER_LIMPEZA_MINUTOS));
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.create(dto));
     }
 
     @GetMapping("/ocupados")
     public ResponseEntity<List<HorarioOcupadoDTO>> getOcupados(
-            @RequestParam Long salaId,
+            @RequestParam Long equipamentoId,
             @RequestParam String data) {
-
         LocalDate localDate = LocalDate.parse(data);
-        return ResponseEntity.ok(reservaService.findOcupados(salaId, localDate));
+        return ResponseEntity.ok(reservaService.findOcupados(equipamentoId, localDate));
     }
 
     @GetMapping
@@ -65,27 +61,24 @@ public class ReservaController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestHeader(value = "X-Usuario-Id", required = true) Long userId) {
         usuarioService.validarRole(userId, "ADMIN");
-        
         reservaService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-   @PutMapping("/{id}/cancelar")
-   public ResponseEntity<Void> cancelar(
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<Void> cancelar(
             @PathVariable Long id,
             @RequestBody String motivo,
             @RequestHeader("X-Usuario-Id") Long usuarioLogadoId) {
-        // usuarioService.validarDonoOuAdmin(usuarioLogadoId, id);
         reservaService.cancelarReserva(id, usuarioLogadoId, motivo);
         return ResponseEntity.noContent().build();
-   }
+    }
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<ReservaResponseDTO>> findByUsuario(@PathVariable Long usuarioId) {
         return ResponseEntity.ok(reservaService.findByUsuario(usuarioId));
     }
-
 }
