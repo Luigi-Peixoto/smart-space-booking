@@ -3,6 +3,8 @@ package imd.ufrn.com.br.smart_space_booking.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.ZonedDateTime;
 
@@ -29,12 +31,24 @@ public class TrustScoreHistorico {
     private Reserva reserva;
 
     /**
-     * Regra que originou a alteração.
-     * Nullable — permite registros de ajustes manuais sem regra vinculada.
+     * RegraAvaliacao (critério de nota do checkout via IA) que originou a alteração.
+     * Nullable — populada apenas quando a origem é a avaliação por critério; null em
+     * ajustes manuais e em eventos estruturais (ver regraEvento).
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "regra_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private RegraAvaliacao regra;
+
+    /**
+     * RegraTrustScoreEvento (cancelamento tardio, no-show, excesso de cancelamentos)
+     * que originou a alteração. Nullable — populada apenas quando a origem é um
+     * desses eventos estruturais; null em ajustes manuais e na avaliação por critério.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "regra_evento_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private RegraTrustScoreEvento regraEvento;
 
     /**
      * Variação aplicada — positiva (bonificação) ou negativa (penalidade).

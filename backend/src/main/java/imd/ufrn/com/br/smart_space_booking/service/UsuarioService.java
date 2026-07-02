@@ -99,14 +99,19 @@ public class UsuarioService {
         if (dto.perfil() != null) {
             usuario.setPerfil(dto.perfil());
         }
-        if (dto.trustScore() != null) {
-            usuario.setTrustScore(dto.trustScore());
-        }
         if (dto.status() != null) {
             usuario.setStatus(UsuarioStatus.valueOf(dto.status().toUpperCase()));
         }
 
-        return convertToDTO(usuarioRepository.save(usuario));
+        Usuario usuarioSalvo = usuarioRepository.save(usuario);
+
+        if (dto.trustScore() != null && !dto.trustScore().equals(usuario.getTrustScore())) {
+            int delta = dto.trustScore() - usuario.getTrustScore();
+            trustScoreService.registrarAlteracao(usuarioSalvo, delta, null, null,
+                    "Ajuste manual do TrustScore por administrador.");
+        }
+
+        return convertToDTO(usuarioSalvo);
     }
 
     @Transactional

@@ -67,6 +67,15 @@ export const atualizarRegra = (id, data, usuarioId) =>
 export const deletarRegra = (id, usuarioId) =>
   api.delete(`/regras/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
 
+export const getRegrasTrustScoreEvento = (usuarioId) =>
+  api.get("/regras-trust-score-evento", { headers: { "X-Usuario-Id": usuarioId } });
+export const criarRegraTrustScoreEvento = (data, usuarioId) =>
+  api.post("/regras-trust-score-evento", data, { headers: { "X-Usuario-Id": usuarioId } });
+export const atualizarRegraTrustScoreEvento = (id, data, usuarioId) =>
+  api.put(`/regras-trust-score-evento/${id}`, data, { headers: { "X-Usuario-Id": usuarioId } });
+export const deletarRegraTrustScoreEvento = (id, usuarioId) =>
+  api.delete(`/regras-trust-score-evento/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
+
 export const reportarIncidente = (recursoId, descricao, usuarioId) =>
   api.post("/incidentes", { recursoId, descricao }, { headers: { "X-Usuario-Id": usuarioId } });
 

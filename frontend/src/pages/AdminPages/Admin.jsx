@@ -107,6 +107,14 @@ function Admin() {
               <span className="material-icons">rule</span>
               Regras de Avaliação
             </button>
+            {/* Botão para navegar para as Penalidades de TrustScore */}
+            <button
+              className="btn-regras"
+              onClick={() => navigate('/regras-trust-score-evento')}
+            >
+              <span className="material-icons">shield</span>
+              Penalidades de TrustScore
+            </button>
             <button className="btn-primary btn-addsala" onClick={() => navigate('/cadastrar-sala')}>
               <span className="material-icons">add</span>
               Nova Sala

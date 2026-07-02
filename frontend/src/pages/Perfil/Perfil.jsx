@@ -256,6 +256,16 @@ function Perfil() {
                     </div>
 
                     <div className="reservation-links">
+                      {reserva.status === "CONFIRMADA" &&
+                        reserva.statusVisual !== "CANCELAR" && (
+                          <button
+                            onClick={() => abrirModalCancelamento(reserva)}
+                            className="reserva-link reserva-link--cancelar"
+                          >
+                            Cancelar reserva
+                          </button>
+                        )}
+
                       <button
                         onClick={() => abrirModalIncidente(reserva)}
                         className="reserva-link reserva-link--problema"

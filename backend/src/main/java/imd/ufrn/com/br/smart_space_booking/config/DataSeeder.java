@@ -8,6 +8,7 @@ import imd.ufrn.com.br.smart_space_booking.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import imd.ufrn.com.br.smart_space_booking.enums.TrustScoreEvento;
 import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
 
 @Component
@@ -17,15 +18,18 @@ public class DataSeeder implements CommandLineRunner {
     private final SalaRepository salaRepository;
     private final ReservaRepository reservaRepository;
     private final RegraAvaliacaoRepository regraRepository;
+    private final RegraTrustScoreEventoRepository regraTrustScoreEventoRepository;
     private final TrustScoreHistoricoRepository trustScoreHistoricoRepository;
 
     public DataSeeder(UsuarioRepository usuarioRepository, SalaRepository salaRepository,
                       ReservaRepository reservaRepository, RegraAvaliacaoRepository regraRepository,
+                      RegraTrustScoreEventoRepository regraTrustScoreEventoRepository,
                       TrustScoreHistoricoRepository trustScoreHistoricoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.salaRepository = salaRepository;
         this.reservaRepository = reservaRepository;
         this.regraRepository = regraRepository;
+        this.regraTrustScoreEventoRepository = regraTrustScoreEventoRepository;
         this.trustScoreHistoricoRepository = trustScoreHistoricoRepository;
     }
 
@@ -38,24 +42,29 @@ public class DataSeeder implements CommandLineRunner {
 
         System.out.println("Iniciando o Database Seeder...");
 
-        // Populando Regras de Avaliação (Motor de Regras)
-        RegraAvaliacao regra1 = new RegraAvaliacao();
-        regra1.setNome("Cancelamento Tardio");
-        regra1.setDescricao("Penalidade por cancelar com menos de 2 horas de antecedência.");
-        regra1.setLimiBonus(10);
-        regra1.setDeltaBonus(0);
-        regra1.setLimiPenalidade(0);
-        regra1.setDeltaPenalidade(-15);
+        // Populando Regras de Avaliação (critérios de nota 0-10 usados pela IA no checkout)
+        // Nenhuma seedada por padrão hoje — o admin cria via /regras conforme a necessidade
+        // de cada tipo de recurso (ex: "Sala suja", "Equipamento danificado").
 
-        RegraAvaliacao regra2 = new RegraAvaliacao();
-        regra2.setNome("Excesso de Cancelamentos");
-        regra2.setDescricao("Penalidade para quem cancela mais de 3 reservas na mesma semana.");
-        regra2.setLimiBonus(10);
-        regra2.setDeltaBonus(0);
-        regra2.setLimiPenalidade(3);
-        regra2.setDeltaPenalidade(-20);
+        // Populando severidade dos eventos estruturais do ciclo de vida da reserva
+        RegraTrustScoreEvento cancelamentoTardio = new RegraTrustScoreEvento();
+        cancelamentoTardio.setEvento(TrustScoreEvento.CANCELAMENTO_TARDIO);
+        cancelamentoTardio.setParametro(2); // janela em horas
+        cancelamentoTardio.setDelta(-15);
+        cancelamentoTardio.setDescricao("Penalidade por cancelar com menos de 2 horas de antecedência.");
 
-        regraRepository.saveAll(List.of(regra1, regra2));
+        RegraTrustScoreEvento noShow = new RegraTrustScoreEvento();
+        noShow.setEvento(TrustScoreEvento.NO_SHOW);
+        noShow.setDelta(-15);
+        noShow.setDescricao("Penalidade por não comparecer à reserva confirmada.");
+
+        RegraTrustScoreEvento excessoCancelamentos = new RegraTrustScoreEvento();
+        excessoCancelamentos.setEvento(TrustScoreEvento.EXCESSO_CANCELAMENTOS);
+        excessoCancelamentos.setParametro(3); // limite de cancelamentos por semana
+        excessoCancelamentos.setDelta(-20);
+        excessoCancelamentos.setDescricao("Penalidade para quem cancela mais de 3 reservas na mesma semana.");
+
+        regraTrustScoreEventoRepository.saveAll(List.of(cancelamentoTardio, noShow, excessoCancelamentos));
 
         // Populando Usuários
         Usuario admin = new Usuario();

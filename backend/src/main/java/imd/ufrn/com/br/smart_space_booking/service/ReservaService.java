@@ -9,16 +9,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import imd.ufrn.com.br.smart_space_booking.dto.ReservaRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.ReservaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
+import imd.ufrn.com.br.smart_space_booking.enums.TrustScoreEvento;
 import imd.ufrn.com.br.smart_space_booking.exception.AcessoNegadoException;
 import imd.ufrn.com.br.smart_space_booking.exception.RegraNegocioException;
 import imd.ufrn.com.br.smart_space_booking.exception.ReservaNotFoundException;
 import imd.ufrn.com.br.smart_space_booking.exception.UsuarioNotFoundException;
-import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
+import imd.ufrn.com.br.smart_space_booking.model.RegraTrustScoreEvento;
 import imd.ufrn.com.br.smart_space_booking.model.Reserva;
 import imd.ufrn.com.br.smart_space_booking.model.Usuario;
-import imd.ufrn.com.br.smart_space_booking.repository.RegraAvaliacaoRepository;
+import imd.ufrn.com.br.smart_space_booking.repository.RegraTrustScoreEventoRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.ReservaRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
+import imd.ufrn.com.br.smart_space_booking.strategy.TrustScoreContexto;
+import imd.ufrn.com.br.smart_space_booking.strategy.TrustScoreDecisao;
 import imd.ufrn.com.br.smart_space_booking.strategy.TrustScoreStrategy;
 import jakarta.transaction.Transactional;
 
@@ -26,33 +29,68 @@ public abstract class ReservaService {
 
     protected final ReservaRepository reservaRepository;
     protected final UsuarioRepository usuarioRepository;
-    protected final RegraAvaliacaoRepository regraAvaliacaoRepository;
+    protected final RegraTrustScoreEventoRepository regraTrustScoreEventoRepository;
     protected final TrustScoreService trustScoreService;
+    private final List<TrustScoreStrategy> trustScoreStrategies;
 
     protected ReservaService(ReservaRepository reservaRepository,
                              UsuarioRepository usuarioRepository,
-                             RegraAvaliacaoRepository regraAvaliacaoRepository,
-                             TrustScoreService trustScoreService) {
+                             RegraTrustScoreEventoRepository regraTrustScoreEventoRepository,
+                             TrustScoreService trustScoreService,
+                             List<TrustScoreStrategy> trustScoreStrategies) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
-        this.regraAvaliacaoRepository = regraAvaliacaoRepository;
+        this.regraTrustScoreEventoRepository = regraTrustScoreEventoRepository;
         this.trustScoreService = trustScoreService;
+        this.trustScoreStrategies = trustScoreStrategies;
     }
-    
 
     // ─── Métodos abstratos — cada hotspot implementa ──────────────────────────
 
     public abstract ReservaResponseDTO create(ReservaRequestDTO dto);
 
-    protected abstract TrustScoreStrategy getTrustScoreStrategy();
-
-    private long getJanelaLimiteCancelamentoEmHoras() {
-        return getTrustScoreStrategy().getJanelaCancelamentoEmHoras();
-    }
-
     protected abstract void executarPosCancelamento(Reserva reserva);
 
     protected abstract void executarPosNoShowAutomatico(Reserva reserva);
+
+    // ─── TrustScore — resolução da strategy e aplicação da decisão ───────────
+
+    /** Escolhe a estratégia de TrustScore pelo tipo do recurso da reserva. */
+    private TrustScoreStrategy resolverTrustScoreStrategy(Reserva reserva) {
+        return trustScoreStrategies.stream()
+                .filter(s -> s.suporta(reserva.getRecurso()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Nenhuma TrustScoreStrategy para o recurso: "
+                                + reserva.getRecurso().getClass().getSimpleName()));
+    }
+
+    private RegraTrustScoreEvento buscarRegra(TrustScoreEvento evento) {
+        return regraTrustScoreEventoRepository.findByEvento(evento).orElse(null);
+    }
+
+    /** Pede a decisão à strategy e, se aplicável, persiste via TrustScoreService. */
+    private void aplicarDecisao(TrustScoreStrategy strategy, TrustScoreEvento evento,
+                                TrustScoreContexto contexto, Usuario usuario, Reserva reserva) {
+        TrustScoreDecisao decisao = strategy.avaliar(evento, contexto);
+        if (decisao.aplicavel()) {
+            trustScoreService.registrarAlteracaoPorEvento(usuario, decisao.delta(), contexto.regra(), reserva, decisao.descricao());
+        }
+    }
+
+    /** Cancela a reserva por no-show e aplica a penalidade de TrustScore correspondente. */
+    private void cancelarPorNoShow(Reserva reserva, String motivo) {
+        reserva.setStatus(ReservaStatus.CANCELADA);
+        reserva.setMotivoCancelamento(motivo);
+        reserva.setDataHoraCancelamento(ZonedDateTime.now());
+
+        if (reserva.getUsuario() != null) {
+            TrustScoreStrategy strategy = resolverTrustScoreStrategy(reserva);
+            RegraTrustScoreEvento regraNoShow = buscarRegra(TrustScoreEvento.NO_SHOW);
+            aplicarDecisao(strategy, TrustScoreEvento.NO_SHOW,
+                    TrustScoreContexto.paraNoShow(regraNoShow), reserva.getUsuario(), reserva);
+        }
+    }
 
     // ─── Ciclo de vida — fixo para qualquer hotspot ───────────────────────────
 
@@ -81,10 +119,9 @@ public abstract class ReservaService {
             throw new RegraNegocioException("O horário da reserva ainda não começou.");
 
         if (agora.isAfter(limite)) {
-            reserva.setStatus(ReservaStatus.CANCELADA);
-            reserva.setMotivoCancelamento("NO_SHOW");
-            reserva.setDataHoraCancelamento(ZonedDateTime.now());
+            cancelarPorNoShow(reserva, "NO_SHOW");
             reservaRepository.save(reserva);
+            executarPosNoShowAutomatico(reserva);
             throw new RegraNegocioException("Tempo de check-in expirado. Reserva cancelada por No-Show.");
         }
     }
@@ -136,31 +173,19 @@ public abstract class ReservaService {
         reservaRepository.save(reserva);
 
         Usuario usuario = reserva.getUsuario();
+        TrustScoreStrategy strategy = resolverTrustScoreStrategy(reserva);
+
         long horasDeAntecedencia = ChronoUnit.HOURS.between(ZonedDateTime.now(), reserva.getInicioDateTime());
-
-        if (horasDeAntecedencia < getJanelaLimiteCancelamentoEmHoras()) {
-            RegraAvaliacao regraTardio = regraAvaliacaoRepository
-                    .findByNomeIgnoreCase("Cancelamento Tardio")
-                    .orElse(null);
-
-            int delta = regraTardio != null 
-                ? regraTardio.getDeltaPenalidade() 
-                : getTrustScoreStrategy().getDeltaPadraoCancelamentoTardio();
-            String descricao = "Cancelamento com " + horasDeAntecedencia + "h de antecedência.";
-            trustScoreService.registrarAlteracao(usuario, delta, regraTardio, reserva, descricao);
-        }
+        RegraTrustScoreEvento regraTardio = buscarRegra(TrustScoreEvento.CANCELAMENTO_TARDIO);
+        aplicarDecisao(strategy, TrustScoreEvento.CANCELAMENTO_TARDIO,
+                TrustScoreContexto.paraCancelamentoTardio(regraTardio, horasDeAntecedencia), usuario, reserva);
 
         ZonedDateTime umaSemanaAtras = ZonedDateTime.now().minusDays(7);
         long cancelamentosNaSemana = reservaRepository.countByUsuarioIdAndStatusAndDataHoraCancelamento(
                 usuario.getId(), ReservaStatus.CANCELADA, umaSemanaAtras);
-
-        regraAvaliacaoRepository.findByNomeIgnoreCase("Excesso de Cancelamentos").ifPresent(regraExcesso -> {
-            if (cancelamentosNaSemana > regraExcesso.getLimiPenalidade()) {
-                trustScoreService.registrarAlteracao(usuario, regraExcesso.getDeltaPenalidade(),
-                        regraExcesso, reserva,
-                        "Excesso de cancelamentos na semana (" + cancelamentosNaSemana + " cancelamentos).");
-            }
-        });
+        RegraTrustScoreEvento regraExcesso = buscarRegra(TrustScoreEvento.EXCESSO_CANCELAMENTOS);
+        aplicarDecisao(strategy, TrustScoreEvento.EXCESSO_CANCELAMENTOS,
+                TrustScoreContexto.paraExcessoCancelamentos(regraExcesso, cancelamentosNaSemana), usuario, reserva);
 
         executarPosCancelamento(reserva);
     }
@@ -175,22 +200,7 @@ public abstract class ReservaService {
 
         if (!reservasExpiradas.isEmpty()) {
             for (Reserva reserva : reservasExpiradas) {
-                reserva.setStatus(ReservaStatus.CANCELADA);
-                reserva.setMotivoCancelamento("NO_SHOW_AUTOMATICO");
-                reserva.setDataHoraCancelamento(ZonedDateTime.now());
-
-                if (reserva.getUsuario() != null) {
-                    RegraAvaliacao regraNoShow = regraAvaliacaoRepository
-                            .findByNomeIgnoreCase("No-Show")
-                            .orElse(null);
-
-                    int delta = regraNoShow != null 
-                        ? regraNoShow.getDeltaPenalidade() 
-                        : getTrustScoreStrategy().getDeltaPadraoNoShow();
-                    trustScoreService.registrarAlteracao(reserva.getUsuario(), delta, regraNoShow,
-                            reserva, "Reserva cancelada automaticamente por no-show.");
-                }
-
+                cancelarPorNoShow(reserva, "NO_SHOW_AUTOMATICO");
                 executarPosNoShowAutomatico(reserva);
             }
             reservaRepository.saveAll(reservasExpiradas);

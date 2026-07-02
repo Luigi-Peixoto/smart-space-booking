@@ -4,12 +4,14 @@ import imd.ufrn.com.br.smart_space_booking.dto.AvaliacaoCriterioDTO;
 import imd.ufrn.com.br.smart_space_booking.dto.TrustScoreHistoricoResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
 import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
+import imd.ufrn.com.br.smart_space_booking.model.RegraTrustScoreEvento;
 import imd.ufrn.com.br.smart_space_booking.model.Reserva;
 import imd.ufrn.com.br.smart_space_booking.model.TrustScoreHistorico;
 import imd.ufrn.com.br.smart_space_booking.model.Usuario;
 import imd.ufrn.com.br.smart_space_booking.repository.RegraAvaliacaoRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.TrustScoreHistoricoRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
+import imd.ufrn.com.br.smart_space_booking.strategy.TrustScoreDecisao;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -36,16 +38,39 @@ public class TrustScoreService {
     }
 
     /**
-     * Aplica uma alteração no TrustScore e registra no histórico.
+     * Aplica uma alteração no TrustScore originada por um critério de avaliação
+     * (checkout via IA) ou por um ajuste manual, e registra no histórico.
      *
      * @param usuario   Usuário afetado — obrigatório
      * @param delta     Variação positiva (bônus) ou negativa (penalidade) — obrigatório
-     * @param regra     Regra que originou a alteração — null se não houver
+     * @param regra     RegraAvaliacao que originou a alteração — null se não houver (ex: ajuste manual)
      * @param reserva   Reserva relacionada — null se não houver
      * @param descricao Contexto adicional — null se não houver
      */
     @Transactional
     public void registrarAlteracao(Usuario usuario, int delta, RegraAvaliacao regra,
+                                   Reserva reserva, String descricao) {
+        aplicarEHistoriar(usuario, delta, regra, null, reserva, descricao);
+    }
+
+    /**
+     * Aplica uma alteração no TrustScore originada por um evento estrutural do
+     * ciclo de vida da reserva (cancelamento tardio, no-show, excesso de
+     * cancelamentos), e registra no histórico.
+     *
+     * @param usuario     Usuário afetado — obrigatório
+     * @param delta       Variação (sempre negativa hoje, mas não é uma regra fixa) — obrigatório
+     * @param regraEvento RegraTrustScoreEvento que originou a alteração — null se não cadastrada (usa fallback da strategy)
+     * @param reserva     Reserva relacionada — null se não houver
+     * @param descricao   Contexto adicional — null se não houver
+     */
+    @Transactional
+    public void registrarAlteracaoPorEvento(Usuario usuario, int delta, RegraTrustScoreEvento regraEvento,
+                                            Reserva reserva, String descricao) {
+        aplicarEHistoriar(usuario, delta, null, regraEvento, reserva, descricao);
+    }
+
+    private void aplicarEHistoriar(Usuario usuario, int delta, RegraAvaliacao regra, RegraTrustScoreEvento regraEvento,
                                    Reserva reserva, String descricao) {
         int scoreAnterior = usuario.getTrustScore() != null ? usuario.getTrustScore() : SCORE_MAXIMO;
         int scorePosterior = clamp(scoreAnterior + delta, SCORE_MINIMO, SCORE_MAXIMO);
@@ -60,6 +85,7 @@ public class TrustScoreService {
         historico.setUsuario(usuario);
         historico.setReserva(reserva);
         historico.setRegra(regra);
+        historico.setRegraEvento(regraEvento);
         historico.setDelta(delta);
         historico.setScoreAnterior(scoreAnterior);
         historico.setScorePosterior(scorePosterior);
@@ -96,25 +122,32 @@ public class TrustScoreService {
             RegraAvaliacao regra = regrasById.get(avaliado.getId());
             if (regra == null) continue;
 
-            int nota = clamp(avaliado.getNota(), 0, 10);
-            int delta = 0;
-            String descricao = null;
-
-            if (nota >= regra.getLimiBonus()) {
-                delta = regra.getDeltaBonus();
-                descricao = "Bônus: " + regra.getNome() + " (nota " + nota + ")";
-            } else if (nota < regra.getLimiPenalidade()) {
-                delta = regra.getDeltaPenalidade();
-                descricao = "Penalidade: " + regra.getNome() + " (nota " + nota + ")";
-            }
-
-            if (delta != 0) {
-                registrarAlteracao(usuario, delta, regra, reserva, descricao);
-                deltaTotal += delta;
+            TrustScoreDecisao decisao = avaliarCriterio(regra, avaliado.getNota());
+            if (decisao.aplicavel()) {
+                registrarAlteracao(usuario, decisao.delta(), regra, reserva, decisao.descricao());
+                deltaTotal += decisao.delta();
             }
         }
 
         return deltaTotal;
+    }
+
+    /**
+     * Decide se a nota dada a um critério de avaliação gera bônus, penalidade ou nada —
+     * mesma fórmula genérica para qualquer RegraAvaliacao, independente do hotspot.
+     */
+    private TrustScoreDecisao avaliarCriterio(RegraAvaliacao regra, int notaBruta) {
+        int nota = clamp(notaBruta, 0, 10);
+
+        if (nota >= regra.getLimiBonus() && regra.getDeltaBonus() != 0) {
+            return TrustScoreDecisao.aplicavel(regra.getDeltaBonus(),
+                    "Bônus: " + regra.getNome() + " (nota " + nota + ")");
+        }
+        if (nota < regra.getLimiPenalidade() && regra.getDeltaPenalidade() != 0) {
+            return TrustScoreDecisao.aplicavel(regra.getDeltaPenalidade(),
+                    "Penalidade: " + regra.getNome() + " (nota " + nota + ")");
+        }
+        return TrustScoreDecisao.naoAplicavel();
     }
 
     /**
