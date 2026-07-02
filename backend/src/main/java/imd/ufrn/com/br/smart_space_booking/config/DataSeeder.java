@@ -3,8 +3,7 @@ package imd.ufrn.com.br.smart_space_booking.config;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import imd.ufrn.com.br.smart_space_booking.model.Sala;
-import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
+import imd.ufrn.com.br.smart_space_booking.instancia_sala.repository.SalaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
