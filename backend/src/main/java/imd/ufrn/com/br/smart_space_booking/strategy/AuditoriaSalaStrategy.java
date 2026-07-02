@@ -6,13 +6,14 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
-import imd.ufrn.com.br.smart_space_booking.dto.AuditoriaResultadoDTO;
-import imd.ufrn.com.br.smart_space_booking.enums.TipoImagem;
-import imd.ufrn.com.br.smart_space_booking.exception.ImagemInvalidaException;
+import imd.ufrn.com.br.smart_space_booking.framework.dto.AuditoriaResultadoDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.TipoImagem;
+import imd.ufrn.com.br.smart_space_booking.framework.exception.ImagemInvalidaException;
 import imd.ufrn.com.br.smart_space_booking.exception.SalaIncorretaException;
-import imd.ufrn.com.br.smart_space_booking.model.Recurso;
-import imd.ufrn.com.br.smart_space_booking.model.RegraAvaliacao;
-import imd.ufrn.com.br.smart_space_booking.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
+import imd.ufrn.com.br.smart_space_booking.framework.model.RegraAvaliacao;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.framework.strategy.AuditoriaStrategy;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
 import imd.ufrn.com.br.smart_space_booking.prompts.SalaPromptTemplate;
 

@@ -3,9 +3,12 @@ package imd.ufrn.com.br.smart_space_booking.strategy;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
-import imd.ufrn.com.br.smart_space_booking.enums.TrustScoreEvento;
-import imd.ufrn.com.br.smart_space_booking.model.RegraTrustScoreEvento;
-import imd.ufrn.com.br.smart_space_booking.model.Recurso;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.TrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
+import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreContexto;
+import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreDecisao;
+import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreStrategy;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
 
 @Component

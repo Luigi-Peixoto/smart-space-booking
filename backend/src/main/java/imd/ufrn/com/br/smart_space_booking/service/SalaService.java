@@ -2,6 +2,7 @@ package imd.ufrn.com.br.smart_space_booking.service;
 
 import imd.ufrn.com.br.smart_space_booking.dto.SalaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.exception.SalaNotFoundException;
+import imd.ufrn.com.br.smart_space_booking.framework.service.RecursoService;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
 import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
 import org.springframework.data.jpa.repository.JpaRepository;

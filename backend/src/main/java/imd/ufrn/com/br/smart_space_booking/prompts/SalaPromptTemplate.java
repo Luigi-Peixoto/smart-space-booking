@@ -1,5 +1,6 @@
 package imd.ufrn.com.br.smart_space_booking.prompts;
 
+import imd.ufrn.com.br.smart_space_booking.framework.prompts.AuditoriaPromptTemplate;
 import org.springframework.stereotype.Component;
 
 /**

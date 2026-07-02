@@ -3,13 +3,20 @@ package imd.ufrn.com.br.smart_space_booking.config;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import imd.ufrn.com.br.smart_space_booking.model.*;
-import imd.ufrn.com.br.smart_space_booking.repository.*;
+import imd.ufrn.com.br.smart_space_booking.model.Sala;
+import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import imd.ufrn.com.br.smart_space_booking.enums.TrustScoreEvento;
-import imd.ufrn.com.br.smart_space_booking.enums.UsuarioStatus;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.TrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.UsuarioStatus;
+import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Usuario;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraAvaliacaoRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraTrustScoreEventoRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.ReservaRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.TrustScoreHistoricoRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.UsuarioRepository;
 
 @Component
 public class DataSeeder implements CommandLineRunner {

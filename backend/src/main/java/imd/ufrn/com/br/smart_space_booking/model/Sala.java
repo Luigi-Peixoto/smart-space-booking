@@ -1,7 +1,8 @@
 package imd.ufrn.com.br.smart_space_booking.model;
 
-import imd.ufrn.com.br.smart_space_booking.enums.StatusRecurso;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.StatusRecurso;
 import imd.ufrn.com.br.smart_space_booking.enums.TipoSala;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 

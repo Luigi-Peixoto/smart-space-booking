@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import imd.ufrn.com.br.smart_space_booking.dto.HorarioOcupadoDTO;
-import imd.ufrn.com.br.smart_space_booking.dto.ReservaRequestDTO;
-import imd.ufrn.com.br.smart_space_booking.dto.ReservaResponseDTO;
-import imd.ufrn.com.br.smart_space_booking.service.UsuarioService;
+import imd.ufrn.com.br.smart_space_booking.framework.dto.HorarioOcupadoDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.dto.ReservaRequestDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.dto.ReservaResponseDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.service.UsuarioService;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController

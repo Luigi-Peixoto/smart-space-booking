@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import imd.ufrn.com.br.smart_space_booking.dto.SalaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
 import imd.ufrn.com.br.smart_space_booking.service.SalaService;
-import imd.ufrn.com.br.smart_space_booking.service.UsuarioService;
+import imd.ufrn.com.br.smart_space_booking.framework.service.UsuarioService;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController

@@ -7,23 +7,25 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import imd.ufrn.com.br.smart_space_booking.dto.HorarioOcupadoDTO;
-import imd.ufrn.com.br.smart_space_booking.dto.ReservaRequestDTO;
-import imd.ufrn.com.br.smart_space_booking.dto.ReservaResponseDTO;
-import imd.ufrn.com.br.smart_space_booking.enums.ReservaStatus;
-import imd.ufrn.com.br.smart_space_booking.enums.ReservaTipo;
-import imd.ufrn.com.br.smart_space_booking.exception.ConflitoHorarioException;
-import imd.ufrn.com.br.smart_space_booking.exception.RegraNegocioException;
+import imd.ufrn.com.br.smart_space_booking.framework.dto.HorarioOcupadoDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.dto.ReservaRequestDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.dto.ReservaResponseDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.ReservaStatus;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.ReservaTipo;
+import imd.ufrn.com.br.smart_space_booking.framework.exception.ConflitoHorarioException;
+import imd.ufrn.com.br.smart_space_booking.framework.exception.RegraNegocioException;
 import imd.ufrn.com.br.smart_space_booking.exception.SalaNotFoundException;
-import imd.ufrn.com.br.smart_space_booking.exception.UsuarioNotFoundException;
-import imd.ufrn.com.br.smart_space_booking.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.framework.exception.UsuarioNotFoundException;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Reserva;
 import imd.ufrn.com.br.smart_space_booking.model.Sala;
-import imd.ufrn.com.br.smart_space_booking.model.Usuario;
-import imd.ufrn.com.br.smart_space_booking.repository.RegraTrustScoreEventoRepository;
-import imd.ufrn.com.br.smart_space_booking.repository.ReservaRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Usuario;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraTrustScoreEventoRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.ReservaRepository;
 import imd.ufrn.com.br.smart_space_booking.repository.SalaRepository;
-import imd.ufrn.com.br.smart_space_booking.repository.UsuarioRepository;
-import imd.ufrn.com.br.smart_space_booking.strategy.TrustScoreStrategy;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.UsuarioRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.service.ReservaService;
+import imd.ufrn.com.br.smart_space_booking.framework.service.TrustScoreService;
+import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreStrategy;
 import jakarta.transaction.Transactional;
 
 @Service
