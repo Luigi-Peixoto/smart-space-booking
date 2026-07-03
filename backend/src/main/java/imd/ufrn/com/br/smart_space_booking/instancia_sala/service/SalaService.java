@@ -1,5 +1,6 @@
 package imd.ufrn.com.br.smart_space_booking.instancia_sala.service;
 
+import imd.ufrn.com.br.smart_space_booking.framework.exception.RegraNegocioException;
 import imd.ufrn.com.br.smart_space_booking.instancia_sala.dto.SalaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.instancia_sala.exception.SalaNotFoundException;
 import imd.ufrn.com.br.smart_space_booking.framework.service.RecursoService;
@@ -21,6 +22,7 @@ public class SalaService extends RecursoService<Sala, SalaResponseDTO> {
     protected JpaRepository<Sala, Long> getRepository() {
         return salaRepository;
     }
+
 
     @Override
     protected SalaResponseDTO convertToDTO(Sala sala) {
@@ -51,4 +53,15 @@ public class SalaService extends RecursoService<Sala, SalaResponseDTO> {
     protected RuntimeException notFoundException(Long id) {
         return new SalaNotFoundException(id);
     }
+
+    @Override
+    protected void validarEspecifico(Sala sala) {
+        if (sala.getCapacidade() == null || sala.getCapacidade() <= 0) {
+            throw new RegraNegocioException("A capacidade da sala deve ser maior que zero.");
+        }
+        if (sala.getImagens() == null || sala.getImagens().isEmpty()) {
+            throw new RegraNegocioException("A sala deve ter pelo menos uma imagem.");
+        }
+    }
+
 }
