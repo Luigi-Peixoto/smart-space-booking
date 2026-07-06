@@ -4,7 +4,7 @@ import Admin from "./pages/AdminPages/Admin";
 import CadastroSala from "./pages/AdminPages/CadastroSala";
 import EditarSala from "./pages/AdminPages/EditarSala";
 import RegrasAvaliacao from "./pages/AdminPages/RegrasAvaliacao";
-import RegrasTrustScoreEvento from "./pages/AdminPages/RegrasTrustScoreEvento";
+import RegrasTrustScore from "./pages/AdminPages/RegrasTrustScore";
 import Login from "./pages/Login/Login";
 import Home from "./pages/Home/Home";
 import Reserva from "./pages/Reserva/Reserva";
@@ -102,10 +102,10 @@ function App() {
               }
             />
             <Route
-              path="/regras-trust-score-evento"
+              path="/regras-trust-score"
               element={
                 <ProtectedRoute allowedRoles={["ADMIN"]}>
-                  <RegrasTrustScoreEvento />
+                  <RegrasTrustScore />
                 </ProtectedRoute>
               }
             />

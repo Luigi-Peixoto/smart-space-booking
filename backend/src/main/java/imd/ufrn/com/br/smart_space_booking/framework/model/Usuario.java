@@ -1,5 +1,6 @@
 package imd.ufrn.com.br.smart_space_booking.framework.model;
 
+import imd.ufrn.com.br.smart_space_booking.framework.enums.NivelExigencia;
 import imd.ufrn.com.br.smart_space_booking.framework.enums.UsuarioStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +28,19 @@ public class Usuario {
     @Column(name = "trust_score")
     private Integer trustScore = 100;
 
+    /**
+     * Nível de exigência mais alto que o TrustScore atual do usuário ainda
+     * satisfaz — snapshot recalculado pelo TrustScoreService toda vez que o
+     * score muda, a partir dos thresholds globais de EXIGENCIA (configurados
+     * pelo admin ou fallback do framework). Não é a fonte de verdade pra
+     * decidir uma reserva específica (isso continua sendo avaliado ao vivo
+     * contra o recurso concreto) — é só um retrato do "nível de restrição"
+     * atual do usuário, pronto pra exibir sem recalcular do zero.
+     */
+    @Column(name = "nivel_restricao")
+    @Enumerated(EnumType.STRING)
+    private NivelExigencia nivelRestricao = NivelExigencia.ALTA;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UsuarioStatus status = UsuarioStatus.ATIVO;
@@ -52,6 +66,9 @@ public class Usuario {
 
     public Integer getTrustScore() { return trustScore; }
     public void setTrustScore(Integer trustScore) { this.trustScore = trustScore; }
+
+    public NivelExigencia getNivelRestricao() { return nivelRestricao; }
+    public void setNivelRestricao(NivelExigencia nivelRestricao) { this.nivelRestricao = nivelRestricao; }
 
     public UsuarioStatus getStatus() { return status; }
     public void setStatus(UsuarioStatus status) { this.status = status; }

@@ -3,7 +3,6 @@ package imd.ufrn.com.br.smart_space_booking.framework.service;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,9 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import imd.ufrn.com.br.smart_space_booking.framework.dto.HorarioOcupadoDTO;
 import imd.ufrn.com.br.smart_space_booking.framework.dto.ReservaRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.framework.dto.ReservaResponseDTO;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.CategoriaRegraTrustScore;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.MomentoEvento;
 import imd.ufrn.com.br.smart_space_booking.framework.enums.ReservaStatus;
 import imd.ufrn.com.br.smart_space_booking.framework.enums.ReservaTipo;
-import imd.ufrn.com.br.smart_space_booking.framework.enums.TrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.evento.EventoTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.exception.AcessoNegadoException;
 import imd.ufrn.com.br.smart_space_booking.framework.exception.ConflitoHorarioException;
 import imd.ufrn.com.br.smart_space_booking.framework.exception.RecursoNotFoundException;
@@ -21,15 +22,13 @@ import imd.ufrn.com.br.smart_space_booking.framework.exception.RegraNegocioExcep
 import imd.ufrn.com.br.smart_space_booking.framework.exception.ReservaNotFoundException;
 import imd.ufrn.com.br.smart_space_booking.framework.exception.UsuarioNotFoundException;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
-import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Reserva;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Usuario;
 import imd.ufrn.com.br.smart_space_booking.framework.repository.RecursoRepository;
-import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraTrustScoreEventoRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraTrustScoreRepository;
 import imd.ufrn.com.br.smart_space_booking.framework.repository.ReservaRepository;
 import imd.ufrn.com.br.smart_space_booking.framework.repository.UsuarioRepository;
-import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreContexto;
-import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreDecisao;
 import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreStrategy;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -47,20 +46,20 @@ public class ReservaService {
     protected final ReservaRepository reservaRepository;
     protected final UsuarioRepository usuarioRepository;
     protected final RecursoRepository recursoRepository;
-    protected final RegraTrustScoreEventoRepository regraTrustScoreEventoRepository;
+    protected final RegraTrustScoreRepository regraTrustScoreRepository;
     protected final TrustScoreService trustScoreService;
     private final List<TrustScoreStrategy> trustScoreStrategies;
 
     public ReservaService(ReservaRepository reservaRepository,
                           UsuarioRepository usuarioRepository,
                           RecursoRepository recursoRepository,
-                          RegraTrustScoreEventoRepository regraTrustScoreEventoRepository,
+                          RegraTrustScoreRepository regraTrustScoreRepository,
                           TrustScoreService trustScoreService,
                           List<TrustScoreStrategy> trustScoreStrategies) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.recursoRepository = recursoRepository;
-        this.regraTrustScoreEventoRepository = regraTrustScoreEventoRepository;
+        this.regraTrustScoreRepository = regraTrustScoreRepository;
         this.trustScoreService = trustScoreService;
         this.trustScoreStrategies = trustScoreStrategies;
     }
@@ -104,6 +103,10 @@ public class ReservaService {
         reserva.setStatus(ReservaStatus.CONFIRMADA);
         reserva.setUsuario(usuario);
         reserva.setRecurso(recurso);
+
+        TrustScoreStrategy strategy = resolverTrustScoreStrategy(reserva);
+        trustScoreService.validarRestricoes(usuario, reserva, strategy);
+
         reservaRepository.save(reserva);
 
         if (minutosBuffer > 0) {
@@ -141,16 +144,27 @@ public class ReservaService {
                                 + reserva.getRecurso().getClass().getSimpleName()));
     }
 
-    private RegraTrustScoreEvento buscarRegra(TrustScoreEvento evento) {
-        return regraTrustScoreEventoRepository.findByEvento(evento).orElse(null);
+    private RegraTrustScore buscarRegra(CategoriaRegraTrustScore categoria, String chave) {
+        return regraTrustScoreRepository.findByCategoriaAndChave(categoria, chave).orElse(null);
     }
 
-    /** Pede a decisão à strategy e, se aplicável, persiste via TrustScoreService. */
-    private void aplicarDecisao(TrustScoreStrategy strategy, TrustScoreEvento evento,
-                                TrustScoreContexto contexto, Usuario usuario, Reserva reserva) {
-        TrustScoreDecisao decisao = strategy.avaliar(evento, contexto);
-        if (decisao.aplicavel()) {
-            trustScoreService.registrarAlteracaoPorEvento(usuario, decisao.delta(), contexto.regra(), reserva, decisao.descricao());
+    /**
+     * Aplica os eventos de TrustScore para a reserva, considerando o momento do evento e as reservas relacionadas.
+     * 
+     */
+    private void aplicarEventos(TrustScoreStrategy strategy, Usuario usuario, Reserva reserva, MomentoEvento momento,
+                               List<Reserva> reservasRelacionadas) {
+        for (EventoTrustScore evento : strategy.eventos()) {
+            if (evento.momento() != momento) {
+                continue;
+            }
+
+            RegraTrustScore regra = buscarRegra(CategoriaRegraTrustScore.EVENTO, evento.chave());
+            StringBuilder descricao = new StringBuilder();
+            int delta = evento.avaliar(reserva, reservasRelacionadas, regra, descricao);
+            if (delta != 0) {
+                trustScoreService.registrarAlteracaoPorEvento(usuario, delta, regra, reserva, descricao.toString());
+            }
         }
     }
 
@@ -162,9 +176,7 @@ public class ReservaService {
 
         if (reserva.getUsuario() != null) {
             TrustScoreStrategy strategy = resolverTrustScoreStrategy(reserva);
-            RegraTrustScoreEvento regraNoShow = buscarRegra(TrustScoreEvento.NO_SHOW);
-            aplicarDecisao(strategy, TrustScoreEvento.NO_SHOW,
-                    TrustScoreContexto.paraNoShow(regraNoShow), reserva.getUsuario(), reserva);
+            aplicarEventos(strategy, reserva.getUsuario(), reserva, MomentoEvento.NO_SHOW, List.of());
         }
 
         cancelarBufferSeExistir(reserva);
@@ -226,6 +238,11 @@ public class ReservaService {
         reserva.setDataHoraCheckin(ZonedDateTime.now());
         reserva.setStatus(ReservaStatus.EM_ANDAMENTO);
         reservaRepository.save(reserva);
+
+        if (reserva.getUsuario() != null) {
+            TrustScoreStrategy strategy = resolverTrustScoreStrategy(reserva);
+            aplicarEventos(strategy, reserva.getUsuario(), reserva, MomentoEvento.CHECKIN, List.of());
+        }
     }
 
     public void validarCheckout(Long reservaId, Long usuarioLogadoId) {
@@ -248,6 +265,11 @@ public class ReservaService {
         reserva.setDataHoraCheckout(ZonedDateTime.now());
         reserva.setStatus(ReservaStatus.ENCERRADA);
         reservaRepository.save(reserva);
+
+        if (reserva.getUsuario() != null) {
+            TrustScoreStrategy strategy = resolverTrustScoreStrategy(reserva);
+            aplicarEventos(strategy, reserva.getUsuario(), reserva, MomentoEvento.CHECKOUT, List.of());
+        }
     }
 
     @Transactional
@@ -269,17 +291,10 @@ public class ReservaService {
         Usuario usuario = reserva.getUsuario();
         TrustScoreStrategy strategy = resolverTrustScoreStrategy(reserva);
 
-        long horasDeAntecedencia = ChronoUnit.HOURS.between(ZonedDateTime.now(), reserva.getInicioDateTime());
-        RegraTrustScoreEvento regraTardio = buscarRegra(TrustScoreEvento.CANCELAMENTO_TARDIO);
-        aplicarDecisao(strategy, TrustScoreEvento.CANCELAMENTO_TARDIO,
-                TrustScoreContexto.paraCancelamentoTardio(regraTardio, horasDeAntecedencia), usuario, reserva);
-
         ZonedDateTime umaSemanaAtras = ZonedDateTime.now().minusDays(7);
-        long cancelamentosNaSemana = reservaRepository.countByUsuarioIdAndStatusAndDataHoraCancelamento(
+        List<Reserva> cancelamentosNaSemana = reservaRepository.findByUsuarioIdAndStatusAndDataHoraCancelamentoAfter(
                 usuario.getId(), ReservaStatus.CANCELADA, umaSemanaAtras);
-        RegraTrustScoreEvento regraExcesso = buscarRegra(TrustScoreEvento.EXCESSO_CANCELAMENTOS);
-        aplicarDecisao(strategy, TrustScoreEvento.EXCESSO_CANCELAMENTOS,
-                TrustScoreContexto.paraExcessoCancelamentos(regraExcesso, cancelamentosNaSemana), usuario, reserva);
+        aplicarEventos(strategy, usuario, reserva, MomentoEvento.CANCELAMENTO, cancelamentosNaSemana);
 
         cancelarBufferSeExistir(reserva);
     }

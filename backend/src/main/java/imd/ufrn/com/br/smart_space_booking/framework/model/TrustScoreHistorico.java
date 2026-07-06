@@ -1,12 +1,25 @@
 package imd.ufrn.com.br.smart_space_booking.framework.model;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import java.time.ZonedDateTime;
+
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.ZonedDateTime;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.TrustScoreHistoricoTipo;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -23,17 +36,33 @@ public class TrustScoreHistorico {
     private Usuario usuario;
 
     /**
-     * Reserva relacionada ao evento, se houver.
-     * Nullable — nem todo evento está vinculado a uma reserva.
+     * PENALIDADE (delta de score) ou BLOQUEIO (reserva barrada, score não muda).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false)
+    private TrustScoreHistoricoTipo tipo = TrustScoreHistoricoTipo.PENALIDADE;
+
+    /**
+     * Reserva relacionada, se houver.
+     * Nullable — bloqueios não têm Reserva persistida (a tentativa foi barrada
+     * antes de criar).
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reserva_id")
     private Reserva reserva;
 
     /**
+     * Recurso da tentativa de reserva, quando não há Reserva persistida (BLOQUEIO).
+     * Nullable — penalidades já têm o recurso via {@link #reserva}.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recurso_id")
+    private Recurso recurso;
+
+    /**
      * RegraAvaliacao (critério de nota do checkout via IA) que originou a alteração.
      * Nullable — populada apenas quando a origem é a avaliação por critério; null em
-     * ajustes manuais e em eventos estruturais (ver regraEvento).
+     * ajustes manuais e em eventos estruturais/restrições (ver regraTrustScore).
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "regra_id")
@@ -41,29 +70,31 @@ public class TrustScoreHistorico {
     private RegraAvaliacao regra;
 
     /**
-     * RegraTrustScoreEvento (cancelamento tardio, no-show, excesso de cancelamentos)
-     * que originou a alteração. Nullable — populada apenas quando a origem é um
-     * desses eventos estruturais; null em ajustes manuais e na avaliação por critério.
+     * RegraTrustScore (qualquer categoria — EVENTO, EXIGENCIA ou RESTRICAO) que
+     * originou a alteração ou o bloqueio. Nullable — populada apenas quando a
+     * origem é uma dessas; null em ajustes manuais e na avaliação por critério,
+     * e também null quando o bloqueio usou fallback do hotspot (sem regra
+     * cadastrada pelo admin).
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "regra_evento_id")
+    @JoinColumn(name = "regra_trust_score_id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
-    private RegraTrustScoreEvento regraEvento;
+    private RegraTrustScore regraTrustScore;
 
     /**
-     * Variação aplicada — positiva (bonificação) ou negativa (penalidade).
+     * Variação aplicada — positiva (bonificação), negativa (penalidade) ou 0 (bloqueio).
      */
     @Column(name = "delta", nullable = false)
     private Integer delta;
 
     /**
-     * Valor do TrustScore antes da alteração.
+     * Valor do TrustScore antes da alteração (igual a scorePosterior em bloqueios).
      */
     @Column(name = "score_anterior", nullable = false)
     private Integer scoreAnterior;
 
     /**
-     * Valor do TrustScore após a alteração.
+     * Valor do TrustScore após a alteração (igual a scoreAnterior em bloqueios).
      */
     @Column(name = "score_posterior", nullable = false)
     private Integer scorePosterior;

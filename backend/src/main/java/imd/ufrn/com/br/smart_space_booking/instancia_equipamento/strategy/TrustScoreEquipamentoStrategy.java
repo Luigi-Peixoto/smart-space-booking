@@ -1,24 +1,30 @@
 package imd.ufrn.com.br.smart_space_booking.instancia_equipamento.strategy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-import imd.ufrn.com.br.smart_space_booking.framework.enums.TrustScoreEvento;
-import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.MomentoEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.evento.EventoTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
-import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreContexto;
-import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreDecisao;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.framework.restricao.LimiteConcorrenciaRestricao;
+import imd.ufrn.com.br.smart_space_booking.framework.restricao.RestricaoTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreStrategy;
 import imd.ufrn.com.br.smart_space_booking.instancia_equipamento.model.Equipamento;
 
+/**
+ * Regra de negócio própria do Equipamento: nem todo equipamento tem a mesma
+ * criticidade (câmera e projetor são mais disputados que um item genérico),
+ * e quanto mais subitens o kit tem, maior o risco/prejuízo de um no-show ou
+ * cancelamento de última hora (mais peças fora de circulação de uma vez só).
+ * A penalidade escala pela combinação tipo x tamanho do kit.
+ */
 @Component
 public class TrustScoreEquipamentoStrategy implements TrustScoreStrategy {
 
-    // Fallbacks usados quando o admin ainda não cadastrou a RegraTrustScoreEvento do evento.
-    private static final long JANELA_CANCELAMENTO_PADRAO_EM_HORAS = 6L;
-    private static final long LIMITE_CANCELAMENTOS_PADRAO = 3L;
-    private static final int DELTA_PADRAO_NO_SHOW = -15;
-    private static final int DELTA_PADRAO_CANCELAMENTO_TARDIO = -10;
-    private static final int DELTA_PADRAO_EXCESSO_CANCELAMENTOS = -20;
+    private static final double INCREMENTO_POR_SUBITEM = 0.1;
 
     @Override
     public boolean suporta(Recurso recurso) {
@@ -26,49 +32,46 @@ public class TrustScoreEquipamentoStrategy implements TrustScoreStrategy {
     }
 
     @Override
-    public TrustScoreDecisao avaliar(TrustScoreEvento evento, TrustScoreContexto contexto) {
-        return switch (evento) {
-            case CANCELAMENTO_TARDIO -> avaliarCancelamentoTardio(contexto);
-            case NO_SHOW -> avaliarNoShow(contexto);
-            case EXCESSO_CANCELAMENTOS -> avaliarExcessoCancelamentos(contexto);
+    public String tipoRecurso() {
+        return "EQUIPAMENTO";
+    }
+
+    @Override
+    public double fatorSeveridade(Reserva reserva) {
+        Equipamento equipamento = (Equipamento) reserva.getRecurso();
+
+        double fatorCriticidade = switch (equipamento.getTipo()) {
+            case CAMERA, PROJETOR -> 1.5; // alta demanda / baixa disponibilidade
+            case NOTEBOOK, MICROFONE -> 1.2;
+            case OUTRO -> 1.0;
         };
+
+        int tamanhoKit = equipamento.getSubItens() != null ? equipamento.getSubItens().size() : 0;
+        double fatorKit = 1.0 + (tamanhoKit * INCREMENTO_POR_SUBITEM);
+
+        return fatorCriticidade * fatorKit;
     }
 
-    private TrustScoreDecisao avaliarCancelamentoTardio(TrustScoreContexto contexto) {
-        RegraTrustScoreEvento regra = contexto.regra();
-        long janela = parametroOu(regra, JANELA_CANCELAMENTO_PADRAO_EM_HORAS);
-        long horas = contexto.horasDeAntecedencia();
-
-        if (horas >= janela) {
-            return TrustScoreDecisao.naoAplicavel();
-        }
-
-        int delta = regra != null ? regra.getDelta() : DELTA_PADRAO_CANCELAMENTO_TARDIO;
-        return TrustScoreDecisao.aplicavel(delta,
-                "Cancelamento com " + horas + "h de antecedência (janela: " + janela + "h).");
+    /** Equipamentos são mais escassos que salas; tolera menos cancelamentos na semana antes de penalizar. */
+    @Override
+    public long limiteCancelamentosPadrao() {
+        return 2L;
     }
 
-    private TrustScoreDecisao avaliarNoShow(TrustScoreContexto contexto) {
-        RegraTrustScoreEvento regra = contexto.regra();
-        int delta = regra != null ? regra.getDelta() : DELTA_PADRAO_NO_SHOW;
-        return TrustScoreDecisao.aplicavel(delta, "Reserva cancelada automaticamente por no-show.");
+    @Override
+    public List<RestricaoTrustScore> restricoes() {
+        return List.of(
+                new LimiteConcorrenciaRestricao(tipoRecurso(), 2, 60),
+                new LimiteTamanhoKitRestricao(tipoRecurso() + ":TAMANHO_KIT", 3, 50),
+                new RestricaoFimDeSemana(tipoRecurso() + ":FIM_DE_SEMANA", 45)
+        );
     }
 
-    private TrustScoreDecisao avaliarExcessoCancelamentos(TrustScoreContexto contexto) {
-        RegraTrustScoreEvento regra = contexto.regra();
-        long limite = parametroOu(regra, LIMITE_CANCELAMENTOS_PADRAO);
-        long cancelamentos = contexto.cancelamentosNaSemana();
-
-        if (cancelamentos <= limite) {
-            return TrustScoreDecisao.naoAplicavel();
-        }
-
-        int delta = regra != null ? regra.getDelta() : DELTA_PADRAO_EXCESSO_CANCELAMENTOS;
-        return TrustScoreDecisao.aplicavel(delta,
-                "Excesso de cancelamentos na semana (" + cancelamentos + " cancelamentos, limite " + limite + ").");
-    }
-
-    private long parametroOu(RegraTrustScoreEvento regra, long padrao) {
-        return regra != null && regra.getParametro() != null ? regra.getParametro() : padrao;
+    @Override
+    public List<EventoTrustScore> eventos() {
+        List<EventoTrustScore> eventos = new ArrayList<>(TrustScoreStrategy.super.eventos());
+        eventos.add(new DevolucaoAtrasadaEvento(tipoRecurso() + ":DEVOLUCAO_ATRASADA", -10, MomentoEvento.CHECKOUT));
+        eventos.add(new CancelamentoReservaCurtaEvento(tipoRecurso() + ":CANCELAMENTO_RESERVA_CURTA", -5, MomentoEvento.CANCELAMENTO));
+        return eventos;
     }
 }

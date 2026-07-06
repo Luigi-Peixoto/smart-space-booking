@@ -7,12 +7,12 @@ import imd.ufrn.com.br.smart_space_booking.instancia_sala.repository.SalaReposit
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import imd.ufrn.com.br.smart_space_booking.framework.enums.TrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.CategoriaRegraTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.enums.UsuarioStatus;
-import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Usuario;
 import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraAvaliacaoRepository;
-import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraTrustScoreEventoRepository;
+import imd.ufrn.com.br.smart_space_booking.framework.repository.RegraTrustScoreRepository;
 import imd.ufrn.com.br.smart_space_booking.framework.repository.ReservaRepository;
 import imd.ufrn.com.br.smart_space_booking.framework.repository.TrustScoreHistoricoRepository;
 import imd.ufrn.com.br.smart_space_booking.framework.repository.UsuarioRepository;
@@ -24,18 +24,18 @@ public class DataSeeder implements CommandLineRunner {
     private final SalaRepository salaRepository;
     private final ReservaRepository reservaRepository;
     private final RegraAvaliacaoRepository regraRepository;
-    private final RegraTrustScoreEventoRepository regraTrustScoreEventoRepository;
+    private final RegraTrustScoreRepository regraTrustScoreRepository;
     private final TrustScoreHistoricoRepository trustScoreHistoricoRepository;
 
     public DataSeeder(UsuarioRepository usuarioRepository, SalaRepository salaRepository,
                       ReservaRepository reservaRepository, RegraAvaliacaoRepository regraRepository,
-                      RegraTrustScoreEventoRepository regraTrustScoreEventoRepository,
+                      RegraTrustScoreRepository regraTrustScoreRepository,
                       TrustScoreHistoricoRepository trustScoreHistoricoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.salaRepository = salaRepository;
         this.reservaRepository = reservaRepository;
         this.regraRepository = regraRepository;
-        this.regraTrustScoreEventoRepository = regraTrustScoreEventoRepository;
+        this.regraTrustScoreRepository = regraTrustScoreRepository;
         this.trustScoreHistoricoRepository = trustScoreHistoricoRepository;
     }
 
@@ -53,24 +53,27 @@ public class DataSeeder implements CommandLineRunner {
         // de cada tipo de recurso (ex: "Sala suja", "Equipamento danificado").
 
         // Populando severidade dos eventos estruturais do ciclo de vida da reserva
-        RegraTrustScoreEvento cancelamentoTardio = new RegraTrustScoreEvento();
-        cancelamentoTardio.setEvento(TrustScoreEvento.CANCELAMENTO_TARDIO);
-        cancelamentoTardio.setParametro(2); // janela em horas
-        cancelamentoTardio.setDelta(-15);
+        RegraTrustScore cancelamentoTardio = new RegraTrustScore();
+        cancelamentoTardio.setCategoria(CategoriaRegraTrustScore.EVENTO);
+        cancelamentoTardio.setChave("CANCELAMENTO_TARDIO");
+        cancelamentoTardio.setValorPrincipal(-15); // delta
+        cancelamentoTardio.setValorSecundario(2); // janela em horas
         cancelamentoTardio.setDescricao("Penalidade por cancelar com menos de 2 horas de antecedência.");
 
-        RegraTrustScoreEvento noShow = new RegraTrustScoreEvento();
-        noShow.setEvento(TrustScoreEvento.NO_SHOW);
-        noShow.setDelta(-15);
+        RegraTrustScore noShow = new RegraTrustScore();
+        noShow.setCategoria(CategoriaRegraTrustScore.EVENTO);
+        noShow.setChave("NO_SHOW");
+        noShow.setValorPrincipal(-15); // delta
         noShow.setDescricao("Penalidade por não comparecer à reserva confirmada.");
 
-        RegraTrustScoreEvento excessoCancelamentos = new RegraTrustScoreEvento();
-        excessoCancelamentos.setEvento(TrustScoreEvento.EXCESSO_CANCELAMENTOS);
-        excessoCancelamentos.setParametro(3); // limite de cancelamentos por semana
-        excessoCancelamentos.setDelta(-20);
+        RegraTrustScore excessoCancelamentos = new RegraTrustScore();
+        excessoCancelamentos.setCategoria(CategoriaRegraTrustScore.EVENTO);
+        excessoCancelamentos.setChave("EXCESSO_CANCELAMENTOS");
+        excessoCancelamentos.setValorPrincipal(-20); // delta
+        excessoCancelamentos.setValorSecundario(3); // limite de cancelamentos por semana
         excessoCancelamentos.setDescricao("Penalidade para quem cancela mais de 3 reservas na mesma semana.");
 
-        regraTrustScoreEventoRepository.saveAll(List.of(cancelamentoTardio, noShow, excessoCancelamentos));
+        regraTrustScoreRepository.saveAll(List.of(cancelamentoTardio, noShow, excessoCancelamentos));
 
         // Populando Usuários
         Usuario admin = new Usuario();

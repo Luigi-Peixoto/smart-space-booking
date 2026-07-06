@@ -40,7 +40,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             ZonedDateTime inicioDateTime,
             ReservaTipo tipo);
 
-    long countByUsuarioIdAndStatusAndDataHoraCancelamento(
+    List<Reserva> findByUsuarioIdAndStatusAndDataHoraCancelamentoAfter(
             Long usuarioId,
             ReservaStatus status,
             ZonedDateTime dataLimite);
@@ -49,6 +49,11 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             "AND r.tipo <> 'MANUTENCAO' " +
             "ORDER BY r.createdAt DESC")
     List<Reserva> findReservasPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    @Query("SELECT r FROM Reserva r WHERE r.usuario.id = :usuarioId " +
+            "AND r.tipo <> 'MANUTENCAO' " +
+            "AND r.status IN ('CONFIRMADA', 'EM_ANDAMENTO')")
+    List<Reserva> findReservasAtivasPorUsuario(@Param("usuarioId") Long usuarioId);
 
     @Query("SELECT r FROM Reserva r WHERE r.status = 'CONFIRMADA' " +
             "AND r.dataHoraCheckin IS NULL " +

@@ -1,24 +1,33 @@
 package imd.ufrn.com.br.smart_space_booking.instancia_veiculo.strategy;
 
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-import imd.ufrn.com.br.smart_space_booking.framework.enums.TrustScoreEvento;
-import imd.ufrn.com.br.smart_space_booking.framework.model.RegraTrustScoreEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.enums.MomentoEvento;
+import imd.ufrn.com.br.smart_space_booking.framework.evento.EventoTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
-import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreContexto;
-import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreDecisao;
+import imd.ufrn.com.br.smart_space_booking.framework.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.framework.restricao.LimiteConcorrenciaRestricao;
+import imd.ufrn.com.br.smart_space_booking.framework.restricao.LimiteDuracaoReservaRestricao;
+import imd.ufrn.com.br.smart_space_booking.framework.restricao.RestricaoTrustScore;
 import imd.ufrn.com.br.smart_space_booking.framework.strategy.TrustScoreStrategy;
 import imd.ufrn.com.br.smart_space_booking.instancia_veiculo.model.Veiculo;
 
+/**
+ * Regra de negócio própria do Veículo: cancelar ou faltar numa reserva de
+ * poucas horas é bem menos disruptivo do que numa reserva de vários dias —
+ * quem reservou o carro pra uma viagem longa provavelmente já organizou outras
+ * coisas em torno dela. A penalidade escala com a duração da própria reserva,
+ * não com um número fixo por evento.
+ */
 @Component
 public class TrustScoreVeiculoStrategy implements TrustScoreStrategy {
 
-    // Fallbacks usados quando o admin ainda não cadastrou a RegraTrustScoreEvento do evento.
-    private static final long JANELA_CANCELAMENTO_PADRAO_EM_HORAS = 24L;
-    private static final long LIMITE_CANCELAMENTOS_PADRAO = 3L;
-    private static final int DELTA_PADRAO_NO_SHOW = -15;
-    private static final int DELTA_PADRAO_CANCELAMENTO_TARDIO = -10;
-    private static final int DELTA_PADRAO_EXCESSO_CANCELAMENTOS = -20;
+    private static final long HORAS_VIAGEM_LONGA = 48L;
+    private static final long HORAS_DIA_INTEIRO = 12L;
 
     @Override
     public boolean suporta(Recurso recurso) {
@@ -26,49 +35,39 @@ public class TrustScoreVeiculoStrategy implements TrustScoreStrategy {
     }
 
     @Override
-    public TrustScoreDecisao avaliar(TrustScoreEvento evento, TrustScoreContexto contexto) {
-        return switch (evento) {
-            case CANCELAMENTO_TARDIO -> avaliarCancelamentoTardio(contexto);
-            case NO_SHOW -> avaliarNoShow(contexto);
-            case EXCESSO_CANCELAMENTOS -> avaliarExcessoCancelamentos(contexto);
-        };
+    public String tipoRecurso() {
+        return "VEICULO";
     }
 
-    private TrustScoreDecisao avaliarCancelamentoTardio(TrustScoreContexto contexto) {
-        RegraTrustScoreEvento regra = contexto.regra();
-        long janela = parametroOu(regra, JANELA_CANCELAMENTO_PADRAO_EM_HORAS);
-        long horas = contexto.horasDeAntecedencia();
+    @Override
+    public double fatorSeveridade(Reserva reserva) {
+        long horasReservadas = ChronoUnit.HOURS.between(reserva.getInicioDateTime(), reserva.getFimDateTime());
 
-        if (horas >= janela) {
-            return TrustScoreDecisao.naoAplicavel();
-        }
-
-        int delta = regra != null ? regra.getDelta() : DELTA_PADRAO_CANCELAMENTO_TARDIO;
-        return TrustScoreDecisao.aplicavel(delta,
-                "Cancelamento com " + horas + "h de antecedência (janela: " + janela + "h).");
+        if (horasReservadas >= HORAS_VIAGEM_LONGA) return 2.0; // viagem de dois dias ou mais
+        if (horasReservadas >= HORAS_DIA_INTEIRO) return 1.5; // reserva de um dia inteiro
+        return 1.0; // poucas horas
     }
 
-    private TrustScoreDecisao avaliarNoShow(TrustScoreContexto contexto) {
-        RegraTrustScoreEvento regra = contexto.regra();
-        int delta = regra != null ? regra.getDelta() : DELTA_PADRAO_NO_SHOW;
-        return TrustScoreDecisao.aplicavel(delta, "Reserva cancelada automaticamente por no-show.");
+    /** Cancelar um carro exige reorganizar logística/combustível/chaves — pede mais antecedência que o padrão do framework. */
+    @Override
+    public long janelaCancelamentoPadrao() {
+        return 6L;
     }
 
-    private TrustScoreDecisao avaliarExcessoCancelamentos(TrustScoreContexto contexto) {
-        RegraTrustScoreEvento regra = contexto.regra();
-        long limite = parametroOu(regra, LIMITE_CANCELAMENTOS_PADRAO);
-        long cancelamentos = contexto.cancelamentosNaSemana();
-
-        if (cancelamentos <= limite) {
-            return TrustScoreDecisao.naoAplicavel();
-        }
-
-        int delta = regra != null ? regra.getDelta() : DELTA_PADRAO_EXCESSO_CANCELAMENTOS;
-        return TrustScoreDecisao.aplicavel(delta,
-                "Excesso de cancelamentos na semana (" + cancelamentos + " cancelamentos, limite " + limite + ").");
+    @Override
+    public List<RestricaoTrustScore> restricoes() {
+        return List.of(
+                new LimiteConcorrenciaRestricao(tipoRecurso(), 1, 60),
+                new LimiteDuracaoReservaRestricao(tipoRecurso() + ":DURACAO_MAXIMA", 24L, 50),
+                new RestricaoHorarioNoturno(tipoRecurso() + ":HORARIO_NOTURNO", 22, 55)
+        );
     }
 
-    private long parametroOu(RegraTrustScoreEvento regra, long padrao) {
-        return regra != null && regra.getParametro() != null ? regra.getParametro() : padrao;
+    @Override
+    public List<EventoTrustScore> eventos() {
+        List<EventoTrustScore> eventos = new ArrayList<>(TrustScoreStrategy.super.eventos());
+        eventos.add(new DevolucaoAtrasadaVeiculoEvento(tipoRecurso() + ":DEVOLUCAO_ATRASADA", -5, MomentoEvento.CHECKOUT));
+        eventos.add(new CancelamentoMadrugadaEvento(tipoRecurso() + ":CANCELAMENTO_MADRUGADA", -8, MomentoEvento.CANCELAMENTO));
+        return eventos;
     }
 }

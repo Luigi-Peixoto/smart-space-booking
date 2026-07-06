@@ -181,6 +181,7 @@ public class UsuarioService {
                 usuario.getEmail(),
                 usuario.getNome(),
                 usuario.getTrustScore(),
+                usuario.getNivelRestricao(),
                 usuario.getPerfil(),
                 usuario.getStatus() != null ? usuario.getStatus().name() : null
         );

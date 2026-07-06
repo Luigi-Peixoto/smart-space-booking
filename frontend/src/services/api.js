@@ -67,14 +67,24 @@ export const atualizarRegra = (id, data, usuarioId) =>
 export const deletarRegra = (id, usuarioId) =>
   api.delete(`/regras/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
 
-export const getRegrasTrustScoreEvento = (usuarioId) =>
-  api.get("/regras-trust-score-evento", { headers: { "X-Usuario-Id": usuarioId } });
-export const criarRegraTrustScoreEvento = (data, usuarioId) =>
-  api.post("/regras-trust-score-evento", data, { headers: { "X-Usuario-Id": usuarioId } });
-export const atualizarRegraTrustScoreEvento = (id, data, usuarioId) =>
-  api.put(`/regras-trust-score-evento/${id}`, data, { headers: { "X-Usuario-Id": usuarioId } });
-export const deletarRegraTrustScoreEvento = (id, usuarioId) =>
-  api.delete(`/regras-trust-score-evento/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
+// CRUD único pra todo ajuste de TrustScore configurável — penalidade por
+// evento, exigência mínima por sensibilidade do recurso e restrições de uso
+// (concorrência, duração, ou o que cada hotspot declarar), todos filtrados
+// por "categoria" (EVENTO/EXIGENCIA/RESTRICAO).
+export const getRegrasTrustScore = (categoria, usuarioId) =>
+  api.get("/regras-trust-score", { params: { categoria }, headers: { "X-Usuario-Id": usuarioId } });
+export const criarRegraTrustScore = (data, usuarioId) =>
+  api.post("/regras-trust-score", data, { headers: { "X-Usuario-Id": usuarioId } });
+export const atualizarRegraTrustScore = (id, data, usuarioId) =>
+  api.put(`/regras-trust-score/${id}`, data, { headers: { "X-Usuario-Id": usuarioId } });
+export const deletarRegraTrustScore = (id, usuarioId) =>
+  api.delete(`/regras-trust-score/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
+export const getRestricoesDisponiveis = (usuarioId, tipoRecurso) =>
+  api.get("/regras-trust-score/restricoes-disponiveis", { params: { tipoRecurso }, headers: { "X-Usuario-Id": usuarioId } });
+export const getEventosDisponiveis = (usuarioId, tipoRecurso) =>
+  api.get("/regras-trust-score/eventos-disponiveis", { params: { tipoRecurso }, headers: { "X-Usuario-Id": usuarioId } });
+export const getNiveisExigenciaDisponiveis = (usuarioId, tipoRecurso) =>
+  api.get("/regras-trust-score/niveis-exigencia-disponiveis", { params: { tipoRecurso }, headers: { "X-Usuario-Id": usuarioId } });
 
 export const reportarIncidente = (recursoId, descricao, usuarioId) =>
   api.post("/incidentes", { recursoId, descricao }, { headers: { "X-Usuario-Id": usuarioId } });

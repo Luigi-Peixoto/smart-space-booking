@@ -142,7 +142,10 @@ export default function Reserva() {
       setShowModal(true);
     } catch (error) {
       console.error("Erro ao criar reserva:", error);
-      alert("Falha na reserva. Verifique se o horário já não foi preenchido.");
+      alert(
+        error.response?.data ||
+          "Falha na reserva. Verifique se o horário já não foi preenchido.",
+      );
     } finally {
       setSubmitting(false);
     }
