@@ -7,6 +7,7 @@ import imd.ufrn.com.br.smart_space_booking.framework.exception.RecursoIncorretoE
 import imd.ufrn.com.br.smart_space_booking.framework.model.RegraAvaliacao;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.framework.prompts.AuditoriaPromptTemplate;
 import imd.ufrn.com.br.smart_space_booking.framework.strategy.AuditoriaStrategy;
 import imd.ufrn.com.br.smart_space_booking.instancia_veiculo.model.Veiculo;
 import imd.ufrn.com.br.smart_space_booking.instancia_veiculo.prompts.VeiculoPromptTemplate;
@@ -49,13 +50,8 @@ public class AuditoriaVeiculoStrategy implements AuditoriaStrategy {
     }
 
     @Override
-    public String promptCheckIn() {
-        return prompts.promptCheckIn();
-    }
-
-    @Override
-    public String promptCheckOut(List<RegraAvaliacao> regras) {
-        return prompts.promptCheckOut(regras);
+    public AuditoriaPromptTemplate getPromptTemplate() {
+        return prompts;
     }
 
     @Override

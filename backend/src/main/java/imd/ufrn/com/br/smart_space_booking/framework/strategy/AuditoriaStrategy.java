@@ -5,6 +5,7 @@ import imd.ufrn.com.br.smart_space_booking.framework.enums.TipoImagem;
 import imd.ufrn.com.br.smart_space_booking.framework.model.RegraAvaliacao;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Recurso;
 import imd.ufrn.com.br.smart_space_booking.framework.model.Reserva;
+import imd.ufrn.com.br.smart_space_booking.framework.prompts.AuditoriaPromptTemplate;
 
 import java.util.List;
 
@@ -19,9 +20,14 @@ public interface AuditoriaStrategy {
     /** URLs das imagens de referência cadastradas no recurso. Sala = getImagens(). */
     List<String> imagensReferencia(Reserva reserva);
 
-    String promptCheckIn();
+    AuditoriaPromptTemplate getPromptTemplate();
 
-    String promptCheckOut(List<RegraAvaliacao> regras);
+    default String promptCheckIn() {
+        return getPromptTemplate().promptCheckIn();
+    }
+    default String promptCheckOut(List<RegraAvaliacao> regras) {
+        return getPromptTemplate().promptCheckOut(regras);
+    }
 
     /** Validações de domínio sobre o resultado do Gemini. Só decide o que é válido — NÃO mexe em imagens. */
     void validarResultado(AuditoriaResultadoDTO resultado);
