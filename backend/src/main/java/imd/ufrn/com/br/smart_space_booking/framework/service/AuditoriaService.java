@@ -81,7 +81,7 @@ public class AuditoriaService {
         // Check-in usa prompt fixo do hotspot — sem critérios de nota
         List<byte[]> imagensReferencia = carregarReferencia(strategy, reserva);
         String respostaTexto = geminiClient.analisar(
-                strategy.promptCheckIn(), imagensReferencia, imagens);
+                strategy.promptCheckIn(imagensReferencia.size()), imagensReferencia, imagens);
 
         AuditoriaResultadoDTO resultado = parsearResposta(respostaTexto);
         validarResultado(strategy, resultado, imageIds);
@@ -114,9 +114,8 @@ public class AuditoriaService {
         validarQuantidadeImagens(strategy, imagens, imageIds);
 
         List<RegraAvaliacao> regras = regraAvaliacaoService.buscarTodasParaPrompt();
-        String prompt = strategy.promptCheckOut(regras);
-
         List<byte[]> imagensReferencia = carregarReferencia(strategy, reserva);
+        String prompt = strategy.promptCheckOut(regras, imagensReferencia.size());
         String respostaTexto = geminiClient.analisar(prompt, imagensReferencia, imagens);
 
         AuditoriaResultadoDTO resultado = parsearResposta(respostaTexto);
@@ -174,6 +173,7 @@ public class AuditoriaService {
     private void validarResultado(AuditoriaStrategy strategy,
                                   AuditoriaResultadoDTO resultado, List<String> imageIds) {
         try {
+
             strategy.validarResultado(resultado);
         } catch (RuntimeException e) {
             deletarImagens(imageIds);

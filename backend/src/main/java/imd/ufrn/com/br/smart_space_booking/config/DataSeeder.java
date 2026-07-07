@@ -111,7 +111,7 @@ public class DataSeeder implements CommandLineRunner {
         salaRepository.saveAll(List.of(salaReuniao, lab));
 
         Veiculo carroFrota = new Veiculo("Corolla Frota 01", StatusRecurso.ATIVA,
-                "ABC1D23", "9BWZZZ377VT004251", "12345678901",
+                "OWB4H94", "9BWZZZ377VT004251", "12345678901",
                 "Corolla", "Toyota", "Prata",
                 List.of("url_imagem_corolla.jpg"));
 
