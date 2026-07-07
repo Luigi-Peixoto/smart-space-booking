@@ -3,6 +3,7 @@ package imd.ufrn.com.br.smart_space_booking.instancia_sala.strategy;
 
 import java.util.List;
 
+import imd.ufrn.com.br.smart_space_booking.framework.prompts.AuditoriaPromptTemplate;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
@@ -41,14 +42,10 @@ public class AuditoriaSalaStrategy implements AuditoriaStrategy {
         Sala sala = (Sala) Hibernate.unproxy(reserva.getRecurso());
         return sala.getImagens();
     }
-    @Override
-    public String promptCheckIn() {
-        return prompts.promptCheckIn();
-    }
 
     @Override
-    public String promptCheckOut(List<RegraAvaliacao> regras) {
-        return prompts.promptCheckOut(regras);
+    public AuditoriaPromptTemplate getPromptTemplate() {
+        return prompts;
     }
 
     @Override
