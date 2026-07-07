@@ -18,7 +18,7 @@ import imd.ufrn.com.br.smart_space_booking.framework.dto.IncidenteRequestDTO;
 import imd.ufrn.com.br.smart_space_booking.framework.dto.IncidenteResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.framework.service.IncidenteService;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 @RestController
 @RequestMapping("/incidentes")
 public class IncidenteController {

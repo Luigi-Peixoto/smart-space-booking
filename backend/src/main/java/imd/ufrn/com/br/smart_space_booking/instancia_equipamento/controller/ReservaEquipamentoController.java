@@ -23,7 +23,7 @@ import imd.ufrn.com.br.smart_space_booking.framework.dto.ReservaResponseDTO;
 import imd.ufrn.com.br.smart_space_booking.framework.service.ReservaService;
 import imd.ufrn.com.br.smart_space_booking.framework.service.UsuarioService;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 @RestController
 @RequestMapping("/reservas-equipamento")
 public class ReservaEquipamentoController {

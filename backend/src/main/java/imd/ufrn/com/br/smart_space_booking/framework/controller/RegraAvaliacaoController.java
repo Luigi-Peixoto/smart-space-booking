@@ -13,7 +13,7 @@ import java.util.Map;
 
 //todo: ver se perfil admin
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 @RestController
 @RequestMapping("/regras")
 public class RegraAvaliacaoController {

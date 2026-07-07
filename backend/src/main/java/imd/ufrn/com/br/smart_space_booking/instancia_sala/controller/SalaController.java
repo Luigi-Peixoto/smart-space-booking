@@ -20,7 +20,7 @@ import imd.ufrn.com.br.smart_space_booking.instancia_sala.model.Sala;
 import imd.ufrn.com.br.smart_space_booking.instancia_sala.service.SalaService;
 import imd.ufrn.com.br.smart_space_booking.framework.service.UsuarioService;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 @RestController
 @RequestMapping("/salas")
 public class SalaController {
