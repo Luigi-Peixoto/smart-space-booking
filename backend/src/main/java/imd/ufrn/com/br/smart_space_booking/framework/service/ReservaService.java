@@ -119,7 +119,7 @@ public class ReservaService {
             reservaRepository.save(bufferReserva);
         }
 
-        return ReservaResponseDTO.fromEntity(reserva);
+        return ReservaResponseDTO.fromEntity(reserva, strategy.tipoRecurso());
     }
 
     public List<HorarioOcupadoDTO> findOcupados(Long recursoId, LocalDate data) {
@@ -144,16 +144,25 @@ public class ReservaService {
                                 + reserva.getRecurso().getClass().getSimpleName()));
     }
 
+    /** Resolve o tipo do recurso (ex: "SALA", "VEICULO") reaproveitando as TrustScoreStrategy já registradas. */
+    private String resolverTipoRecurso(Reserva reserva) {
+        return trustScoreStrategies.stream()
+                .filter(s -> s.suporta(reserva.getRecurso()))
+                .findFirst()
+                .map(TrustScoreStrategy::tipoRecurso)
+                .orElse("DESCONHECIDO");
+    }
+
     private RegraTrustScore buscarRegra(CategoriaRegraTrustScore categoria, String chave) {
         return regraTrustScoreRepository.findByCategoriaAndChave(categoria, chave).orElse(null);
     }
 
     /**
      * Aplica os eventos de TrustScore para a reserva, considerando o momento do evento e as reservas relacionadas.
-     * 
+     *
      */
     private void aplicarEventos(TrustScoreStrategy strategy, Usuario usuario, Reserva reserva, MomentoEvento momento,
-                               List<Reserva> reservasRelacionadas) {
+                                List<Reserva> reservasRelacionadas) {
         for (EventoTrustScore evento : strategy.eventos()) {
             if (evento.momento() != momento) {
                 continue;
@@ -317,14 +326,14 @@ public class ReservaService {
 
     public List<ReservaResponseDTO> findAll() {
         return reservaRepository.findAll().stream()
-                .map(ReservaResponseDTO::fromEntity)
+                .map(r -> ReservaResponseDTO.fromEntity(r, resolverTipoRecurso(r)))
                 .toList();
     }
 
     public ReservaResponseDTO findById(Long id) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new ReservaNotFoundException("Reserva não encontrada com o ID: " + id));
-        return ReservaResponseDTO.fromEntity(reserva);
+        return ReservaResponseDTO.fromEntity(reserva, resolverTipoRecurso(reserva));
     }
 
     @Transactional
@@ -338,7 +347,17 @@ public class ReservaService {
         usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuário não encontrado"));
         return reservaRepository.findReservasPorUsuario(usuarioId).stream()
-                .map(ReservaResponseDTO::fromEntity)
+                .map(r -> ReservaResponseDTO.fromEntity(r, resolverTipoRecurso(r)))
+                .toList();
+    }
+
+    /** Mesma listagem, mas filtrada por tipo de recurso (ex: "VEICULO", "SALA"). */
+    public List<ReservaResponseDTO> findByUsuario(Long usuarioId, String tipoRecurso) {
+        usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuário não encontrado"));
+        return reservaRepository.findReservasPorUsuario(usuarioId).stream()
+                .filter(r -> resolverTipoRecurso(r).equals(tipoRecurso))
+                .map(r -> ReservaResponseDTO.fromEntity(r, tipoRecurso))
                 .toList();
     }
 }

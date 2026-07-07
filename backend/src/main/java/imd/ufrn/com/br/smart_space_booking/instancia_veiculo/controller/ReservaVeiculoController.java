@@ -79,6 +79,6 @@ public class ReservaVeiculoController {
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<ReservaResponseDTO>> findByUsuario(@PathVariable Long usuarioId) {
-        return ResponseEntity.ok(reservaService.findByUsuario(usuarioId));
+        return ResponseEntity.ok(reservaService.findByUsuario(usuarioId, "VEICULO"));
     }
 }

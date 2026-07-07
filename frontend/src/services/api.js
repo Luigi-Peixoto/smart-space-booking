@@ -72,22 +72,44 @@ export const deletarRegra = (id, usuarioId) =>
 // (concorrência, duração, ou o que cada hotspot declarar), todos filtrados
 // por "categoria" (EVENTO/EXIGENCIA/RESTRICAO).
 export const getRegrasTrustScore = (categoria, usuarioId) =>
-  api.get("/regras-trust-score", { params: { categoria }, headers: { "X-Usuario-Id": usuarioId } });
+  api.get("/regras-trust-score", {
+    params: { categoria },
+    headers: { "X-Usuario-Id": usuarioId },
+  });
 export const criarRegraTrustScore = (data, usuarioId) =>
-  api.post("/regras-trust-score", data, { headers: { "X-Usuario-Id": usuarioId } });
+  api.post("/regras-trust-score", data, {
+    headers: { "X-Usuario-Id": usuarioId },
+  });
 export const atualizarRegraTrustScore = (id, data, usuarioId) =>
-  api.put(`/regras-trust-score/${id}`, data, { headers: { "X-Usuario-Id": usuarioId } });
+  api.put(`/regras-trust-score/${id}`, data, {
+    headers: { "X-Usuario-Id": usuarioId },
+  });
 export const deletarRegraTrustScore = (id, usuarioId) =>
-  api.delete(`/regras-trust-score/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
+  api.delete(`/regras-trust-score/${id}`, {
+    headers: { "X-Usuario-Id": usuarioId },
+  });
 export const getRestricoesDisponiveis = (usuarioId, tipoRecurso) =>
-  api.get("/regras-trust-score/restricoes-disponiveis", { params: { tipoRecurso }, headers: { "X-Usuario-Id": usuarioId } });
+  api.get("/regras-trust-score/restricoes-disponiveis", {
+    params: { tipoRecurso },
+    headers: { "X-Usuario-Id": usuarioId },
+  });
 export const getEventosDisponiveis = (usuarioId, tipoRecurso) =>
-  api.get("/regras-trust-score/eventos-disponiveis", { params: { tipoRecurso }, headers: { "X-Usuario-Id": usuarioId } });
+  api.get("/regras-trust-score/eventos-disponiveis", {
+    params: { tipoRecurso },
+    headers: { "X-Usuario-Id": usuarioId },
+  });
 export const getNiveisExigenciaDisponiveis = (usuarioId, tipoRecurso) =>
-  api.get("/regras-trust-score/niveis-exigencia-disponiveis", { params: { tipoRecurso }, headers: { "X-Usuario-Id": usuarioId } });
+  api.get("/regras-trust-score/niveis-exigencia-disponiveis", {
+    params: { tipoRecurso },
+    headers: { "X-Usuario-Id": usuarioId },
+  });
 
 export const reportarIncidente = (recursoId, descricao, usuarioId) =>
-  api.post("/incidentes", { recursoId, descricao }, { headers: { "X-Usuario-Id": usuarioId } });
+  api.post(
+    "/incidentes",
+    { recursoId, descricao },
+    { headers: { "X-Usuario-Id": usuarioId } },
+  );
 
 export const getIncidentesPendentes = (adminId) =>
   api.get("/incidentes/pendentes", { headers: { "X-Usuario-Id": adminId } });
@@ -119,5 +141,36 @@ export const getTrustScoreHistorico = (usuarioId) =>
 
 export const getAuditoriasPorReserva = (reservaId) =>
   api.get(`/auditorias/reserva/${reservaId}`);
+
+export const getVeiculos = () => api.get("/veiculos");
+export const getVeiculoById = (id) => api.get(`/veiculos/${id}`);
+export const deletarVeiculo = (id, usuarioId) =>
+  api.delete(`/veiculos/${id}`, { headers: { "X-Usuario-Id": usuarioId } });
+export const cadastrarVeiculo = (veiculoData, usuarioId) =>
+  api.post("/veiculos", veiculoData, {
+    headers: { "X-Usuario-Id": usuarioId },
+  });
+export const atualizarVeiculo = (id, veiculoData, usuarioId) =>
+  api.put(`/veiculos/${id}`, veiculoData, {
+    headers: { "X-Usuario-Id": usuarioId },
+  });
+
+export const criarReservaVeiculo = (reservaData) =>
+  api.post("/reservas-veiculo", reservaData);
+
+export const getHorariosOcupadosVeiculo = (veiculoId, data) =>
+  api.get("/reservas-veiculo/ocupados", {
+    params: { veiculoId, data },
+  });
+
+export const getReservasVeiculoUsuario = (usuarioId) =>
+  api.get(`/reservas-veiculo/usuario/${usuarioId}`);
+
+export const cancelarReservaVeiculo = (reservaId, usuarioId, motivo) =>
+  api.put(
+    `/reservas-veiculo/${reservaId}/cancelar`,
+    { motivo },
+    { headers: { "X-Usuario-Id": usuarioId } },
+  );
 
 export default api;
