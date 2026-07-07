@@ -67,14 +67,7 @@ public class TrustScoreService {
     }
 
     /**
-     * Aplica uma alteração no TrustScore originada por um critério de avaliação
-     * (checkout via IA) ou por um ajuste manual, e registra no histórico.
-     *
-     * @param usuario   Usuário afetado — obrigatório
-     * @param delta     Variação positiva (bônus) ou negativa (penalidade) — obrigatório
-     * @param regra     RegraAvaliacao que originou a alteração — null se não houver (ex: ajuste manual)
-     * @param reserva   Reserva relacionada — null se não houver
-     * @param descricao Contexto adicional — null se não houver
+     * Aplica uma alteração no TrustScore originada por critérios de avaliação (checkout via IA) e registra no histórico.
      */
     @Transactional
     public void registrarAlteracao(Usuario usuario, int delta, RegraAvaliacao regra,
@@ -83,15 +76,8 @@ public class TrustScoreService {
     }
 
     /**
-     * Aplica uma alteração no TrustScore originada por um evento estrutural do
-     * ciclo de vida da reserva (cancelamento tardio, no-show, excesso de
-     * cancelamentos), e registra no histórico.
-     *
-     * @param usuario     Usuário afetado — obrigatório
-     * @param delta       Variação (sempre negativa hoje, mas não é uma regra fixa) — obrigatório
-     * @param regraEvento RegraTrustScore (categoria EVENTO) que originou a alteração — null se não cadastrada (usa fallback da strategy)
-     * @param reserva     Reserva relacionada — null se não houver
-     * @param descricao   Contexto adicional — null se não houver
+     * Aplica uma alteração no TrustScore originada por um evento de TrustScore (ex: bloqueio de recurso) e registra no histórico.
+     * 
      */
     @Transactional
     public void registrarAlteracaoPorEvento(Usuario usuario, int delta, RegraTrustScore regraEvento,
@@ -127,12 +113,9 @@ public class TrustScoreService {
     // ─── Impacto no uso: exigência de acesso + restrições do hotspot ──────────
 
     /**
-     * Barra a tentativa de reserva se o usuário não tiver o TrustScore
-     * necessário — primeiro checa a exigência de acesso do recurso (fixa,
-     * baseada na sensibilidade dele), depois as restrições específicas que o
-     * hotspot declarou ({@link TrustScoreStrategy#restricoes()}). Qualquer
-     * violação grava um registro de BLOQUEIO no histórico e lança
-     * {@link TrustScoreInsuficienteException}.
+     * Valida se o usuário tem TrustScore suficiente para reservar o recurso desejado, considerando:
+     * 1) Exigência de acesso (nível mínimo de TrustScore para o recurso)
+     * 2) Restrições do hotspot (regras específicas que podem barrar a reserva mesmo que o score seja suficiente)
      */
     @Transactional
     public void validarRestricoes(Usuario usuario, Reserva reservaTentativa, TrustScoreStrategy strategy) {
