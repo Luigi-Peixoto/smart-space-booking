@@ -22,11 +22,12 @@ public interface AuditoriaStrategy {
 
     AuditoriaPromptTemplate getPromptTemplate();
 
-    default String promptCheckIn() {
-        return getPromptTemplate().promptCheckIn();
+    default String promptCheckIn(int quantidadeReferencia) {
+        return getPromptTemplate().promptCheckIn(quantidadeReferencia);
     }
-    default String promptCheckOut(List<RegraAvaliacao> regras) {
-        return getPromptTemplate().promptCheckOut(regras);
+
+    default String promptCheckOut(List<RegraAvaliacao> regras, int quantidadeReferencia) {
+        return getPromptTemplate().promptCheckOut(regras, quantidadeReferencia);
     }
 
     /** Validações de domínio sobre o resultado do Gemini. Só decide o que é válido — NÃO mexe em imagens. */

@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../contexts/AuthContext";
+import { AuthContext } from "../../../../contexts/AuthContext";
+import "../../../../pages/AdminPages/Admin.css";
 import {
   atualizarRegraTrustScore,
   criarRegraTrustScore,
@@ -9,17 +10,11 @@ import {
   getNiveisExigenciaDisponiveis,
   getRegrasTrustScore,
   getRestricoesDisponiveis,
-} from "../../services/api";
-import "./Admin.css";
+} from "../../../../services/api";
 import "./RegrasAvaliacao.css";
 
-const TIPO_RECURSO = "SALA";
+const TIPO_RECURSO = "VEICULO";
 
-// Deriva um título legível a partir da chave — eventos e restrições vêm do
-// backend só com (chave, descricao); a chave de concorrência é o próprio
-// TIPO_RECURSO sem sufixo (ex: "SALA"), as demais têm um sufixo depois de ":"
-// (ex: "SALA:CHECKIN_ATRASADO") ou nenhum prefixo (eventos prontos, ex:
-// "CANCELAMENTO_TARDIO").
 function humanizarChave(chave) {
   if (chave === TIPO_RECURSO) return "Limite de reservas simultâneas";
   const partes = chave.split(":");
@@ -28,7 +23,7 @@ function humanizarChave(chave) {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-function RegrasTrustScore() {
+function RegrasTrustScoreVeiculo() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
@@ -143,7 +138,6 @@ function RegrasTrustScore() {
         [chave]: { ...prev[chave], [campo]: v },
       }));
   }
-
   function setExigencia(chave, campo) {
     return (v) =>
       setLinhasExigencia((prev) => ({
@@ -151,7 +145,6 @@ function RegrasTrustScore() {
         [chave]: { ...prev[chave], [campo]: v },
       }));
   }
-
   function setRestricao(chave, campo) {
     return (v) =>
       setLinhasRestricao((prev) => ({
@@ -170,7 +163,6 @@ function RegrasTrustScore() {
       alert("Informe o delta (penalidade).");
       return;
     }
-
     setSalvandoEvento(evento.chave);
     try {
       const payload = {
@@ -183,11 +175,8 @@ function RegrasTrustScore() {
             : null,
         descricao: evento.descricao,
       };
-      if (linha.id) {
-        await atualizarRegraTrustScore(linha.id, payload, user.id);
-      } else {
-        await criarRegraTrustScore(payload, user.id);
-      }
+      if (linha.id) await atualizarRegraTrustScore(linha.id, payload, user.id);
+      else await criarRegraTrustScore(payload, user.id);
       await carregar();
     } catch (e) {
       alert("Erro ao salvar: " + (e.response?.data || e.message));
@@ -205,7 +194,6 @@ function RegrasTrustScore() {
       )
     )
       return;
-
     setSalvandoEvento(evento.chave);
     try {
       await deletarRegraTrustScore(linha.id, user.id);
@@ -227,7 +215,6 @@ function RegrasTrustScore() {
       alert("Informe o score mínimo.");
       return;
     }
-
     setSalvandoNivel(nivel.chave);
     try {
       const payload = {
@@ -236,11 +223,8 @@ function RegrasTrustScore() {
         valorPrincipal: Number(linha.scoreMinimo),
         descricao: nivel.descricao,
       };
-      if (linha.id) {
-        await atualizarRegraTrustScore(linha.id, payload, user.id);
-      } else {
-        await criarRegraTrustScore(payload, user.id);
-      }
+      if (linha.id) await atualizarRegraTrustScore(linha.id, payload, user.id);
+      else await criarRegraTrustScore(payload, user.id);
       await carregar();
     } catch (e) {
       alert("Erro ao salvar: " + (e.response?.data || e.message));
@@ -258,7 +242,6 @@ function RegrasTrustScore() {
       )
     )
       return;
-
     setSalvandoNivel(nivel.chave);
     try {
       await deletarRegraTrustScore(linha.id, user.id);
@@ -284,7 +267,6 @@ function RegrasTrustScore() {
       alert("Informe o score mínimo para exceder o limite.");
       return;
     }
-
     setSalvandoChave(restricao.chave);
     try {
       const payload = {
@@ -294,11 +276,8 @@ function RegrasTrustScore() {
         valorSecundario: Number(linha.scoreMinimoParaExceder),
         descricao: restricao.descricao,
       };
-      if (linha.id) {
-        await atualizarRegraTrustScore(linha.id, payload, user.id);
-      } else {
-        await criarRegraTrustScore(payload, user.id);
-      }
+      if (linha.id) await atualizarRegraTrustScore(linha.id, payload, user.id);
+      else await criarRegraTrustScore(payload, user.id);
       await carregar();
     } catch (e) {
       alert("Erro ao salvar: " + (e.response?.data || e.message));
@@ -316,7 +295,6 @@ function RegrasTrustScore() {
       )
     )
       return;
-
     setSalvandoChave(chave);
     try {
       await deletarRegraTrustScore(linha.id, user.id);
@@ -343,16 +321,16 @@ function RegrasTrustScore() {
       <main className="admin-main">
         <div className="page-header">
           <div>
-            <h1 className="page-title">Regras de TrustScore</h1>
+            <h1 className="page-title">Regras de TrustScore — Veículos</h1>
             <p className="regras-subtitulo">
               Ajuste a severidade das penalidades e o impacto do TrustScore no
-              uso da sala. Configurações não salvas usam o valor padrão do
+              uso da frota. Configurações não salvas usam o valor padrão do
               sistema.
             </p>
           </div>
           <button
             className="btn-secondary"
-            onClick={() => navigate("/salas/admin")}
+            onClick={() => navigate("/veiculos/admin")}
           >
             <span className="material-icons">arrow_back</span>
             Voltar
@@ -373,7 +351,6 @@ function RegrasTrustScore() {
           {eventosDisponiveis.map((evento) => {
             const linha = linhas[evento.chave] || {};
             const salvando = salvandoEvento === evento.chave;
-
             return (
               <div key={evento.chave} className="regra-card">
                 <div className="regra-card-header">
@@ -388,9 +365,7 @@ function RegrasTrustScore() {
                     </span>
                   )}
                 </div>
-
                 <p className="regra-descricao">{evento.descricao}</p>
-
                 {linha.usandoPadrao && (
                   <span
                     className="regra-limiar-label"
@@ -399,7 +374,6 @@ function RegrasTrustScore() {
                     USANDO PADRÃO DO SISTEMA
                   </span>
                 )}
-
                 <div
                   style={{
                     display: "flex",
@@ -420,7 +394,6 @@ function RegrasTrustScore() {
                       }
                     />
                   </div>
-
                   <div>
                     <label className="regras-label">Parâmetro adicional</label>
                     {evento.parametroPadrao !== null ? (
@@ -447,7 +420,6 @@ function RegrasTrustScore() {
                     )}
                   </div>
                 </div>
-
                 <button
                   className="btn-primary"
                   style={{
@@ -473,14 +445,13 @@ function RegrasTrustScore() {
         </h2>
         <p className="regras-subtitulo">
           Os 3 níveis definem o TrustScore mínimo exigido pra reservar. A
-          classificação de cada sala num nível é automática (veja o critério em
-          cada card) — só o score mínimo é editável aqui.
+          classificação de cada veículo num nível é automática (veja o critério
+          em cada card) — só o score mínimo é editável aqui.
         </p>
         <div className="regras-grid">
           {niveisDisponiveis.map((nivel) => {
             const linha = linhasExigencia[nivel.chave] || {};
             const salvando = salvandoNivel === nivel.chave;
-
             return (
               <div key={nivel.chave} className="regra-card">
                 <div className="regra-card-header">
@@ -499,9 +470,7 @@ function RegrasTrustScore() {
                     </span>
                   )}
                 </div>
-
                 <p className="regra-descricao">{nivel.descricao}</p>
-
                 {linha.usandoPadrao && (
                   <span
                     className="regra-limiar-label"
@@ -510,7 +479,6 @@ function RegrasTrustScore() {
                     USANDO PADRÃO DO SISTEMA
                   </span>
                 )}
-
                 <div
                   style={{
                     display: "flex",
@@ -535,7 +503,6 @@ function RegrasTrustScore() {
                     />
                   </div>
                 </div>
-
                 <button
                   className="btn-primary"
                   style={{
@@ -568,7 +535,6 @@ function RegrasTrustScore() {
           {restricoesDisponiveis.map((restricao) => {
             const linha = linhasRestricao[restricao.chave] || {};
             const salvando = salvandoChave === restricao.chave;
-
             return (
               <div key={restricao.chave} className="regra-card">
                 <div className="regra-card-header">
@@ -587,9 +553,7 @@ function RegrasTrustScore() {
                     </span>
                   )}
                 </div>
-
                 <p className="regra-descricao">{restricao.descricao}</p>
-
                 {linha.usandoPadrao && (
                   <span
                     className="regra-limiar-label"
@@ -598,7 +562,6 @@ function RegrasTrustScore() {
                     USANDO PADRÃO DO SISTEMA
                   </span>
                 )}
-
                 <div
                   style={{
                     display: "flex",
@@ -654,7 +617,6 @@ function RegrasTrustScore() {
                     />
                   </div>
                 </div>
-
                 <button
                   className="btn-primary"
                   style={{
@@ -676,4 +638,4 @@ function RegrasTrustScore() {
   );
 }
 
-export default RegrasTrustScore;
+export default RegrasTrustScoreVeiculo;

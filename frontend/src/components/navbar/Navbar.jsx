@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../contexts/AuthContext";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SSBLogo from "../../assets/SSBLogo.png";
+import { AuthContext } from "../../contexts/AuthContext";
 import "./Navbar.css";
 
 function Navbar() {
@@ -13,11 +13,19 @@ function Navbar() {
 
   const termoBusca = searchParams.get("busca") || "";
 
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+  const moduloAtual = pathSegments[0] || "salas";
+
+  const basePath = `/${moduloAtual}`;
+  const homePath = `${basePath}/home`;
+  const adminPath = `${basePath}/admin`;
+  const perfilPath = `${basePath}/perfil`;
+
   const handleBuscaChange = (e) => {
     const valorDigitado = e.target.value;
 
-    if (location.pathname !== "/admin" && location.pathname !== "/home") {
-      const rotaDestino = user?.perfil === "ADMIN" ? "/admin" : "/home";
+    if (location.pathname !== adminPath && location.pathname !== homePath) {
+      const rotaDestino = user?.perfil === "ADMIN" ? adminPath : homePath;
       navigate(`${rotaDestino}?busca=${valorDigitado}`);
       return;
     }
@@ -34,14 +42,19 @@ function Navbar() {
     navigate("/login");
   };
 
+  const getPlaceholder = () => {
+    if (moduloAtual === "veiculos") return "Pesquise um veículo";
+    if (moduloAtual === "equipamentos") return "Pesquise um equipamento";
+    return "Pesquise uma sala";
+  };
+
   return (
     <header className="global-navbar">
       <div
         className="navbar-logo-container clickable"
-        onClick={() => {user?.perfil === "ADMIN" ? navigate("/admin") : navigate("/home")}
-          
-
-        }
+        onClick={() => {
+          navigate(user?.perfil === "ADMIN" ? adminPath : homePath);
+        }}
       >
         <img className="navbar-logo" src={SSBLogo} alt="SSB Logo" />
       </div>
@@ -50,7 +63,7 @@ function Navbar() {
         <span className="material-icons search-icon">search</span>
         <input
           type="text"
-          placeholder="Pesquise uma sala"
+          placeholder={getPlaceholder()}
           value={termoBusca}
           onChange={handleBuscaChange}
         />
@@ -59,7 +72,7 @@ function Navbar() {
       <div className="navbar-actions">
         <div
           className="navbar-user clickable"
-          onClick={() => navigate("/perfil")}
+          onClick={() => navigate(perfilPath)}
         >
           <span className="user-icon material-icons">account_circle</span>
           <span className="user-role">

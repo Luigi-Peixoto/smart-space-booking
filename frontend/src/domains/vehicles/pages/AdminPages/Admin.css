@@ -1,0 +1,155 @@
+/* ============================================================
+   ESTRUTURA DE LAYOUT (Compartilhada entre Admin e Cadastro)
+   ============================================================ */
+
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-light);
+}
+
+.admin-main {
+  flex: 1;
+  padding: 2rem 5%;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.logo-admin {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ============================================================
+   CONTEÚDO DA PÁGINA (Gerenciamento de Salas)
+   ============================================================ */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+/* --- GRID DE CARDS --- */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.room-card {
+  background: var(--white);
+  border-radius: 15px;
+  padding: 1.2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* --- CONTEÚDO INTERNO DO CARD --- */
+.room-card-main-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.room-text-content {
+  flex: 1;
+}
+
+.room-title {
+  font-size: 1.15rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  line-height: 1.2;
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-gray);
+  margin-bottom: 0.5rem;
+}
+
+.room-info .material-icons {
+  font-size: 1.1rem;
+  color: #999;
+}
+
+/* --- IMAGEM NO CARD --- */
+.room-image-container {
+  width: 120px;
+  height: 90px;
+  flex-shrink: 0;
+}
+
+.room-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* --- FOOTER E AÇÕES --- */
+.room-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f8f8f8;
+  margin-top: auto;
+}
+
+.room-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-icon {
+  color: #ccc;
+  cursor: pointer;
+  font-size: 1.4rem;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.action-icon:hover {
+  color: var(--primary-color);
+  background-color: #f0efff;
+}
+
+.action-icon.delete:hover {
+  color: var(--danger);
+  background-color: #fff0f0;
+}
+
+.status-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.status-label.ativa { color: var(--success); }
+.status-label.manutenção { color: var(--warning); }

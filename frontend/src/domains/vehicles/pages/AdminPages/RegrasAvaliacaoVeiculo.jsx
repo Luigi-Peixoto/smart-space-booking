@@ -1,16 +1,16 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../contexts/AuthContext";
+import { AuthContext } from "../../../../contexts/AuthContext";
+import "../../../../pages/AdminPages/Admin.css";
 import {
   atualizarRegra,
   criarRegra,
   deletarRegra,
   getRegras,
-} from "../../services/api";
-import "./Admin.css";
+} from "../../../../services/api";
 import "./RegrasAvaliacao.css";
 
-function RegrasAvaliacao() {
+function RegrasAvaliacaoVeiculo() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [regras, setRegras] = useState([]);
@@ -79,11 +79,8 @@ function RegrasAvaliacao() {
     }
     setSalvando(true);
     try {
-      if (regraEditando) {
-        await atualizarRegra(regraEditando.id, form, user.id);
-      } else {
-        await criarRegra(form, user.id);
-      }
+      if (regraEditando) await atualizarRegra(regraEditando.id, form, user.id);
+      else await criarRegra(form, user.id);
       await carregarRegras();
       setModalAberto(false);
     } catch (e) {
@@ -120,19 +117,19 @@ function RegrasAvaliacao() {
   return (
     <div className="admin-container">
       <main className="admin-main">
-        {/* Header */}
         <div className="page-header">
           <div>
-            <h1 className="page-title">Regras de Avaliação</h1>
+            <h1 className="page-title">Regras de Avaliação — Veículos</h1>
             <p className="regras-subtitulo">
               Configure os critérios que a IA usa para avaliar o check-out (nota
-              0–10 por critério).
+              0–10 por critério). ⚠️ Estes critérios são compartilhados com
+              todas as instâncias do sistema.
             </p>
           </div>
           <div className="regras-header-actions">
             <button
               className="btn-secondary"
-              onClick={() => navigate("/salas/admin")}
+              onClick={() => navigate("/veiculos/admin")}
             >
               <span className="material-icons">arrow_back</span>
               Voltar
@@ -144,7 +141,6 @@ function RegrasAvaliacao() {
           </div>
         </div>
 
-        {/* Lista vazia */}
         {regras.length === 0 && (
           <div className="regras-empty">
             <span className="material-icons regras-empty-icon">rule</span>
@@ -158,7 +154,6 @@ function RegrasAvaliacao() {
           </div>
         )}
 
-        {/* Grid de cards */}
         {regras.length > 0 && (
           <div className="regras-grid">
             {regras.map((r) => (
@@ -180,10 +175,7 @@ function RegrasAvaliacao() {
                     </span>
                   </div>
                 </div>
-
                 <p className="regra-descricao">{r.descricao}</p>
-
-                {/* Limiares */}
                 <div className="regra-limiares">
                   <div className="regra-limiar regra-limiar--bonus">
                     <span className="regra-limiar-label">▲ BÔNUS</span>
@@ -208,8 +200,6 @@ function RegrasAvaliacao() {
                     </div>
                   </div>
                 </div>
-
-                {/* Barra de zonas */}
                 <div className="regra-barra-container">
                   <div className="regra-barra">
                     <div
@@ -243,7 +233,6 @@ function RegrasAvaliacao() {
         )}
       </main>
 
-      {/* Modal */}
       {modalAberto && (
         <div
           style={{
@@ -313,7 +302,6 @@ function RegrasAvaliacao() {
                 </button>
               )}
             </div>
-
             <div
               style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
             >
@@ -323,21 +311,19 @@ function RegrasAvaliacao() {
                   className="regras-input"
                   value={form.nome}
                   onChange={(e) => set("nome")(e.target.value)}
-                  placeholder="Ex: Limpeza geral"
+                  placeholder="Ex: Estado da lataria"
                 />
               </div>
-
               <div>
                 <label className="regras-label">Instrução para a IA</label>
                 <textarea
                   className="regras-input regras-textarea"
                   value={form.descricao}
                   onChange={(e) => set("descricao")(e.target.value)}
-                  placeholder="Ex: Verifique se superfícies, chão e mesas estão livres de sujeira."
+                  placeholder="Ex: Verifique se há amassados, arranhões ou avarias visíveis na lataria."
                   rows={2}
                 />
               </div>
-
               <div
                 style={{
                   display: "grid",
@@ -345,7 +331,6 @@ function RegrasAvaliacao() {
                   gap: "1rem",
                 }}
               >
-                {/* Bônus */}
                 <div
                   style={{
                     background: "rgba(40,167,69,0.05)",
@@ -389,8 +374,6 @@ function RegrasAvaliacao() {
                     onChange={(e) => set("deltaBonus")(Number(e.target.value))}
                   />
                 </div>
-
-                {/* Penalidade */}
                 <div
                   style={{
                     background: "rgba(220,53,69,0.05)",
@@ -439,7 +422,6 @@ function RegrasAvaliacao() {
                   />
                 </div>
               </div>
-
               <p
                 style={{
                   fontSize: "0.8rem",
@@ -462,7 +444,6 @@ function RegrasAvaliacao() {
                 </span>
               </p>
             </div>
-
             <div
               style={{
                 display: "flex",
@@ -505,4 +486,4 @@ function RegrasAvaliacao() {
   );
 }
 
-export default RegrasAvaliacao;
+export default RegrasAvaliacaoVeiculo;

@@ -1,23 +1,23 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import "../../App.css";
-import imagemMockada from "../../assets/mockImagemSala.jpg";
-import { AuthContext } from "../../contexts/AuthContext";
+import "../../../../App.css";
+import imagemMockada from "../../../../assets/mockImagemSala.jpg";
+import { AuthContext } from "../../../../contexts/AuthContext";
 import {
   aprovarIncidente,
-  deletarSala,
+  deletarVeiculo,
   getIncidentesPendentes,
-  getSalas,
+  getVeiculos,
   rejeitarIncidente,
-} from "../../services/api";
+} from "../../../../services/api";
 import "./Admin.css";
 import "./RegrasAvaliacao.css";
 
 const FILE_SERVER_URL = "http://localhost:8088/api/file-server/v1/files";
 
-function Admin() {
+function AdminVeiculo() {
   const { user } = useContext(AuthContext);
-  const [salas, setSalas] = useState([]);
+  const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const [incidentes, setIncidentes] = useState([]);
@@ -38,13 +38,13 @@ function Admin() {
   async function handleAprovar(incidenteId) {
     if (
       !window.confirm(
-        "Aprovar incidente? A sala será bloqueada para MANUTENCAO.",
+        "Aprovar incidente? O veículo será bloqueado para MANUTENCAO.",
       )
     )
       return;
     try {
       await aprovarIncidente(incidenteId, user.id);
-      alert("Incidente aprovado! Sala enviada para manutenção.");
+      alert("Incidente aprovado! Veículo enviado para manutenção.");
       carregarIncidentes();
     } catch (error) {
       alert("Erro ao aprovar incidente.");
@@ -54,7 +54,7 @@ function Admin() {
   async function handleRejeitar(incidenteId) {
     if (
       !window.confirm(
-        "Rejeitar incidente? Ele será arquivado e a sala continuará ativa.",
+        "Rejeitar incidente? Ele será arquivado e o veículo continuará ativo.",
       )
     )
       return;
@@ -68,40 +68,43 @@ function Admin() {
   }
 
   useEffect(() => {
-    async function carregarSalas() {
+    async function carregarVeiculos() {
       try {
-        const response = await getSalas();
-        setSalas(response.data);
+        const response = await getVeiculos();
+        setVeiculos(response.data);
       } catch (error) {
-        console.error("Erro ao carregar salas:", error);
-        alert("Não conseguimos carregar as salas no momento.");
+        console.error("Erro ao carregar veículos:", error);
+        alert("Não conseguimos carregar os veículos no momento.");
       } finally {
         setLoading(false);
       }
     }
-    carregarSalas();
+    carregarVeiculos();
     carregarIncidentes();
   }, []);
 
-  const salasFiltradas = salas.filter((sala) => {
+  const veiculosFiltrados = veiculos.filter((veiculo) => {
     const busca = termoBusca.toLowerCase();
     return (
-      sala.nome.toLowerCase().includes(busca) ||
-      sala.local.toLowerCase().includes(busca)
+      veiculo.nome.toLowerCase().includes(busca) ||
+      veiculo.placa.toLowerCase().includes(busca) ||
+      veiculo.modelo.toLowerCase().includes(busca)
     );
   });
 
   const handleDelete = async (id) => {
     try {
-      await deletarSala(id, user.id);
-      alert("Sala removida com sucesso!");
-      setSalas((prev) => prev.filter((sala) => sala.id !== id));
+      await deletarVeiculo(id, user.id);
+      alert("Veículo removido com sucesso!");
+      setVeiculos((prev) => prev.filter((veiculo) => veiculo.id !== id));
     } catch (error) {
       console.error("Erro ao deletar:", error);
       if (error.response?.status === 404) {
-        setSalas((prev) => prev.filter((sala) => sala.id !== id));
+        setVeiculos((prev) => prev.filter((veiculo) => veiculo.id !== id));
       } else {
-        alert("Erro ao excluir: verifique se a sala possui vínculos ativos.");
+        alert(
+          "Erro ao excluir: verifique se o veículo possui vínculos ativos.",
+        );
       }
     }
   };
@@ -109,7 +112,7 @@ function Admin() {
   if (loading)
     return (
       <div className="p-10 text-center text-xl font-bold">
-        Carregando salas...
+        Carregando veículos...
       </div>
     );
 
@@ -117,35 +120,34 @@ function Admin() {
     <div className="admin-container">
       <main className="admin-main">
         <div className="page-header">
-          <h1 className="page-title">Gerenciar Salas</h1>
+          <h1 className="page-title">Gerenciar Frota</h1>
           <div
             style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
           >
-            {/* Botão para navegar para as Regras de Avaliação */}
             <button
               className="btn-regras"
-              onClick={() => navigate("/salas/regras-avaliacao")}
+              onClick={() => navigate("/veiculos/regras-avaliacao")}
             >
               <span className="material-icons">rule</span>
               Regras de Avaliação
             </button>
-            {/* Botão para navegar para as Regras de TrustScore */}
             <button
               className="btn-regras"
-              onClick={() => navigate("/salas/regras-trust-score")}
+              onClick={() => navigate("/veiculos/regras-trust-score")}
             >
               <span className="material-icons">shield</span>
               Regras de TrustScore
             </button>
             <button
               className="btn-primary btn-addsala"
-              onClick={() => navigate("/salas/cadastrar-sala")}
+              onClick={() => navigate("/veiculos/cadastrar-veiculo")}
             >
               <span className="material-icons">add</span>
-              Nova Sala
+              Novo Veículo
             </button>
           </div>
         </div>
+
         <section
           className="incidentes-section"
           style={{ marginTop: "30px", marginBottom: "40px" }}
@@ -171,7 +173,7 @@ function Admin() {
 
           {loading ? (
             <p style={{ color: "#666", fontStyle: "italic" }}>
-              Buscando relatórios de infraestrutura...
+              Buscando relatórios de frota...
             </p>
           ) : incidentes.length === 0 ? (
             <div
@@ -196,7 +198,7 @@ function Admin() {
                   className="incidente-card"
                   style={{
                     border: "1px solid #e0e0e0",
-                    borderLeft: "5px solid #d9534f", // Destaque lateral de problema
+                    borderLeft: "5px solid #d9534f",
                     padding: "20px",
                     borderRadius: "8px",
                     background: "#fff",
@@ -212,7 +214,6 @@ function Admin() {
                       gap: "15px",
                     }}
                   >
-                    {/* Bloco de Informações */}
                     <div style={{ flex: "1 1 300px" }}>
                       <div
                         style={{
@@ -226,7 +227,7 @@ function Admin() {
                           className="material-icons"
                           style={{ fontSize: "18px", color: "#555" }}
                         >
-                          meeting_room
+                          directions_car
                         </span>
                         <h3
                           style={{
@@ -295,7 +296,6 @@ function Admin() {
                       </p>
                     </div>
 
-                    {/* Bloco de Ações */}
                     <div
                       style={{
                         display: "flex",
@@ -333,7 +333,7 @@ function Admin() {
                         >
                           lock
                         </span>
-                        Aprovar e Bloquear Sala
+                        Aprovar e Bloquear Veículo
                       </button>
 
                       <button
@@ -376,61 +376,65 @@ function Admin() {
         </section>
 
         <section className="rooms-grid">
-          {salasFiltradas.length === 0 ? (
-            <p>Nenhuma sala encontrada.</p>
+          {veiculosFiltrados.length === 0 ? (
+            <p>Nenhum veículo encontrado.</p>
           ) : (
-            salasFiltradas.map((sala) => (
-              <div key={sala.id} className="room-card">
+            veiculosFiltrados.map((veiculo) => (
+              <div key={veiculo.id} className="room-card">
                 <div className="room-card-main-content">
                   <div className="room-text-content">
-                    <h3 className="room-title">{sala.nome}</h3>
+                    <h3 className="room-title">{veiculo.nome}</h3>
                     <p className="room-info">
-                      <span className="material-icons">place</span> {sala.local}
+                      <span className="material-icons">directions_car</span>{" "}
+                      {veiculo.marca} {veiculo.modelo}
                     </p>
                     <p className="room-info">
-                      <span className="material-icons">groups</span>{" "}
-                      {sala.capacidade} pessoas
+                      <span className="material-icons">badge</span>{" "}
+                      {veiculo.placa}
                     </p>
                   </div>
                   <div className="room-image-container">
                     <img
                       src={
-                        `${FILE_SERVER_URL}/${sala.imagens[0]}` || imagemMockada
+                        veiculo.imagens?.[0]
+                          ? `${FILE_SERVER_URL}/${veiculo.imagens[0]}`
+                          : imagemMockada
                       }
-                      alt={sala.nome}
+                      alt={veiculo.nome}
                       className="room-card-img"
                     />
                   </div>
                 </div>
 
                 <div className="sala-features">
-                  {sala.caracteristicas &&
-                    sala.caracteristicas.map((feature, index) => (
-                      <span key={index} className="feature-tag">
-                        {feature}
-                      </span>
-                    ))}
+                  <span className="feature-tag">{veiculo.cor}</span>
+                  <span className="feature-tag">Chassi: {veiculo.chassi}</span>
+                  <span className="feature-tag">
+                    RENAVAM: {veiculo.renavam}
+                  </span>
                 </div>
 
                 <div className="room-card-footer">
                   <div className="room-actions">
                     <span
                       className="material-icons action-icon"
-                      onClick={() => navigate("/salas/editar-sala/" + sala.id)}
+                      onClick={() =>
+                        navigate("/veiculos/editar-veiculo/" + veiculo.id)
+                      }
                     >
                       edit
                     </span>
                     <span
                       className="material-icons action-icon delete"
-                      onClick={() => handleDelete(sala.id)}
+                      onClick={() => handleDelete(veiculo.id)}
                     >
                       delete
                     </span>
                   </div>
                   <span
-                    className={`status-label ${sala.status?.toLowerCase()}`}
+                    className={`status-label ${veiculo.status?.toLowerCase()}`}
                   >
-                    {sala.status}
+                    {veiculo.status}
                   </span>
                 </div>
               </div>
@@ -442,4 +446,4 @@ function Admin() {
   );
 }
 
-export default Admin;
+export default AdminVeiculo;
