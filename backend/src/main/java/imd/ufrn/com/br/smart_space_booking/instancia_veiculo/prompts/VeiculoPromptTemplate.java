@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
  * Todo o esqueleto (etapas, formatação e contrato JSON) vem da classe base.
  *
  * Convenção de imagens (deve casar com AuditoriaVeiculoStrategy.imagensEsperadas()):
- *   1ª = visão EXTERNA da lataria, 2ª = visão INTERNA, 3ª = foto da PLACA.
+ * das imagens ENVIADAS PELO USUÁRIO (ignorando as de referência, que a base já
+ * declara separadamente por quantidade): 1ª = visão EXTERNA da lataria,
+ * 2ª = visão INTERNA, 3ª = foto da PLACA.
  */
 @Component
 public class VeiculoPromptTemplate extends AuditoriaPromptTemplate {
@@ -20,10 +22,12 @@ public class VeiculoPromptTemplate extends AuditoriaPromptTemplate {
 
     @Override
     protected String descricaoImagemValida() {
-        return "um veículo automotor, com as imagens SEMPRE nesta ordem: "
-             + "(1ª) visão EXTERNA da lataria, "
-             + "(2ª) visão INTERNA (bancos e painel) e "
-             + "(3ª) foto aproximada e legível da PLACA";
+        return "um veículo automotor. Das imagens ENVIADAS PELO USUÁRIO especificamente "
+                + "(não conte as imagens de referência, que já foram identificadas por "
+                + "quantidade acima), a ordem SEMPRE é: "
+                + "(1ª foto do usuário) visão EXTERNA da lataria, "
+                + "(2ª foto do usuário) visão INTERNA (bancos e painel) e "
+                + "(3ª foto do usuário) foto aproximada e legível da PLACA";
     }
 
     @Override
@@ -38,6 +42,6 @@ public class VeiculoPromptTemplate extends AuditoriaPromptTemplate {
     @Override
     protected String diferencasIgnoradas() {
         return "sujeira, poeira, respingos de água, reflexos, ângulo e enquadramento da foto, "
-             + "iluminação e o local onde o veículo está estacionado";
+                + "iluminação e o local onde o veículo está estacionado";
     }
 }

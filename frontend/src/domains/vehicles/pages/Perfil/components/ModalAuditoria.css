@@ -1,0 +1,259 @@
+/* OVERLAY */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* BOX */
+.modal-box {
+  background: #ffffff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* CABEÇALHO */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-top: 4px solid;
+  padding-top: 16px;
+  border-radius: 2px;
+}
+
+.modal-titulo-grupo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.modal-icone {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.modal-titulo {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1c1854;
+}
+
+.modal-subtitulo {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.modal-fechar {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.modal-fechar:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* DESCRIÇÃO */
+.modal-descricao {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* ZONA DE UPLOAD */
+.modal-upload-zona {
+  border: 2px dashed;
+  border-radius: 10px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-upload-zona:hover {
+  background-color: #f9f9ff;
+}
+
+.modal-upload-icone {
+  font-size: 32px;
+}
+
+.modal-upload-texto {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-upload-subtexto {
+  margin: 0;
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* PREVIEWS */
+.modal-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+}
+
+.modal-preview-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.modal-preview-remover {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.modal-preview-remover:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+.modal-preview-remover:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modal-preview-adicionar {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #ccc;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.modal-preview-adicionar:hover {
+  border-color: #999;
+  color: #999;
+}
+
+/* RODAPÉ */
+.modal-rodape {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.modal-btn-cancelar {
+  background: transparent;
+  border: 1px solid #ddd;
+  color: #666;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.modal-btn-cancelar:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+.modal-btn-cancelar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-btn-confirmar {
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modal-btn-confirmar:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.modal-btn-confirmar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

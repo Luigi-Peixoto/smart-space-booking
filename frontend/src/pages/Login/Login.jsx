@@ -5,11 +5,18 @@ import { AuthContext } from "../../contexts/AuthContext";
 import { loginUsuario } from "../../services/api";
 import "./Login.css";
 
+const INSTANCIAS = [
+  { chave: "salas", label: "Salas", icone: "meeting_room" },
+  { chave: "veiculos", label: "Veículos", icone: "directions_car" },
+  { chave: "equipamentos", label: "Equipamentos", icone: "devices" },
+];
+
 function Login() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
+  const [instancia, setInstancia] = useState("salas");
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,11 +32,8 @@ function Login() {
 
       login(usuario);
 
-      if (usuario.perfil === "ADMIN") {
-        navigate("/admin");
-      } else {
-        navigate("/home");
-      }
+      const destino = usuario.perfil === "ADMIN" ? "admin" : "home";
+      navigate(`/${instancia}/${destino}`);
     } catch (error) {
       console.error("Erro no login:", error);
       alert(error.response?.data?.message || "Erro ao acessar o sistema.");
@@ -44,6 +48,7 @@ function Login() {
         <h4 className="subtitle">
           Acesse sua conta para gerenciar seus espaços.
         </h4>
+
         <div className="input-group">
           <label htmlFor="nome">Nome Completo</label>
           <input
@@ -66,6 +71,23 @@ function Login() {
             placeholder="Digite seu email"
             required
           />
+        </div>
+
+        <div className="input-group">
+          <label>Escolha o que deseja gerenciar</label>
+          <div className="instancia-badges">
+            {INSTANCIAS.map((item) => (
+              <button
+                key={item.chave}
+                type="button"
+                className={`instancia-badge ${instancia === item.chave ? "instancia-badge--ativo" : ""}`}
+                onClick={() => setInstancia(item.chave)}
+              >
+                <span className="material-icons">{item.icone}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <button type="submit" className="btn-primary">

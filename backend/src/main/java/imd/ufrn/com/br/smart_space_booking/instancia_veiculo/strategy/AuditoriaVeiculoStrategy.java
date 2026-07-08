@@ -56,6 +56,7 @@ public class AuditoriaVeiculoStrategy implements AuditoriaStrategy {
 
     @Override
     public void validarResultado(AuditoriaResultadoDTO resultado) {
+
         if (!resultado.isImagemValida()) {
             throw new ImagemInvalidaException(
                 "As imagens enviadas não correspondem a um veículo nas 3 vistas exigidas " +

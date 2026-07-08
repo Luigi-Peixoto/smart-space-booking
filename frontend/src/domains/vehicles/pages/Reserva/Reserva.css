@@ -1,0 +1,451 @@
+:root {
+  --figma-blue: #343061;
+  --figma-bg: #f4f7f6;
+  --figma-gray-text: #718096;
+  --figma-input-bg: #f0f2f5;
+  --figma-border: #e2e8f0;
+  --success-green: #48bb78;
+  --white: #ffffff;
+}
+
+.admin-main.centered-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 40px;
+  background-color: var(--figma-bg);
+  min-height: calc(100vh - 70px);
+}
+
+.reserva-wrapper {
+  width: 100%;
+  max-width: 850px;
+}
+
+.reserva-title {
+  color: var(--figma-blue);
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+
+.reserva-card {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.reserva-sala-header {
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--figma-border);
+}
+
+.sala-info-main {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.sala-img-mini {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.sala-nome-destaque {
+  color: var(--figma-blue);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.sala-tags {
+  display: flex;
+  gap: 12px;
+  color: var(--figma-gray-text);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.sala-tags span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-voltar-figma {
+  background: var(--white);
+  border: 1px solid var(--figma-border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: var(--figma-blue);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-voltar-figma:hover {
+  background: var(--figma-input-bg);
+}
+
+.reserva-body {
+  padding: 32px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.figma-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--figma-blue);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-with-icon {
+  position: relative;
+  max-width: 450px;
+}
+
+.input-with-icon i {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--figma-blue);
+  pointer-events: none;
+}
+
+.figma-input-large,
+.figma-input-small {
+  background: var(--figma-input-bg);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 16px;
+  color: var(--figma-blue);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.figma-input-large:focus,
+.figma-input-small:focus {
+  border-color: var(--figma-blue);
+}
+
+.horarios-row {
+  display: flex;
+  gap: 20px;
+}
+
+.figma-input-small {
+  width: 180px;
+}
+
+.input-error {
+  border-color: #fc8181 !important;
+  background: #fff5f5 !important;
+}
+
+.label-caps {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--figma-gray-text);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: block;
+  letter-spacing: 0.5px;
+}
+
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.chip-ocupado {
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.reserva-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid var(--figma-border);
+  padding-top: 24px;
+}
+
+.total-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--figma-blue);
+  margin: 4px 0 0 0;
+}
+
+.btn-confirmar-figma {
+  background: var(--figma-blue);
+  color: var(--white);
+  border: none;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
+}
+
+.btn-confirmar-figma:hover:not(:disabled) {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+.btn-confirmar-figma:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-overlay-blurred {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(52, 48, 97, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal-card-refinement {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 24px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-branding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.modal-branding img {
+  height: 30px;
+}
+
+.modal-branding span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--figma-gray-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.success-indication {
+  font-size: 80px !important;
+  color: var(--success-green);
+  margin-bottom: 16px;
+}
+
+.modal-status h2 {
+  color: var(--figma-blue);
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+}
+
+.modal-detailed-confirmation p {
+  color: var(--figma-gray-text);
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.modal-detailed-confirmation strong {
+  color: var(--figma-blue);
+  font-weight: 700;
+}
+
+.modal-booking-reference {
+  background: var(--figma-input-bg);
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 32px;
+}
+
+.modal-booking-reference span:first-child {
+  font-family: "Courier New", Courier, monospace;
+  font-weight: 700;
+  color: var(--figma-blue);
+  font-size: 14px;
+}
+
+.modal-booking-reference .timestamp {
+  font-size: 11px;
+  color: var(--figma-gray-text);
+}
+
+.btn-voltar-home-premium {
+  background: var(--figma-blue);
+  color: var(--white);
+  border: none;
+  padding: 16px 40px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(52, 48, 154, 0.2);
+  transition: all 0.3s;
+}
+
+.btn-voltar-home-premium:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 25px rgba(52, 48, 154, 0.3);
+}
+
+.btn-voltar-home-premium i {
+  font-size: 20px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #cbd5e0;
+  border-top-color: var(--figma-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message-text {
+  color: #e53e3e;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: var(--figma-blue);
+  font-weight: 700;
+}
+
+.error-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  max-width: 500px;
+  width: 100%;
+  margin: auto;
+  animation: modalIn 0.4s ease-out;
+}
+
+.error-icon {
+  font-size: 80px !important;
+  color: #feb2b2;
+  margin-bottom: 24px;
+}
+
+.error-screen h2 {
+  color: var(--figma-blue);
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.error-screen p {
+  color: var(--figma-gray-text);
+  font-size: 16px;
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.btn-error-fallback {
+  background: var(--figma-blue);
+  color: var(--white);
+  border: none;
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-error-fallback:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(52, 48, 97, 0.3);
+}

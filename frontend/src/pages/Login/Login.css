@@ -1,6 +1,8 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
   background-color: var(--bg-light);
 }
 
@@ -49,7 +51,7 @@ form {
 
 .input-group label {
   font-size: 14px;
-  color:  var(--text-gray);
+  color: var(--text-gray);
   margin-bottom: 8px;
 }
 
@@ -63,7 +65,7 @@ form {
 }
 
 .input-group input:focus {
-  border-color:  var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .input-group input::placeholder {
@@ -85,4 +87,77 @@ form {
 
 .login-button:hover {
   background-color: #231f5c;
+}
+
+.instancia-badges {
+  display: flex;
+  gap: 10px;
+}
+
+.instancia-badge {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 12px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background-color: var(--white);
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.instancia-badge .material-icons {
+  font-size: 22px;
+}
+
+.instancia-badge:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.instancia-badge--ativo {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+.instancia-badges {
+  display: flex;
+  gap: 10px;
+}
+
+.instancia-badge {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 12px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background-color: var(--white);
+  color: var(--text-gray);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.instancia-badge .material-icons {
+  font-size: 22px;
+}
+
+.instancia-badge:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.instancia-badge--ativo {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: var(--white);
 }

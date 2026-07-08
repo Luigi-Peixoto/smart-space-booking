@@ -15,6 +15,7 @@ public record ReservaResponseDTO(
         Long usuarioId,
         Long recursoId,
         String recursoNome,
+        String tipoRecurso,
         ZonedDateTime dataHoraCheckin,
         ZonedDateTime dataHoraCheckout,
         String motivoCancelamento,
@@ -22,22 +23,16 @@ public record ReservaResponseDTO(
         ZonedDateTime createdAt,
         ZonedDateTime updatedAt
 ) {
-    public static ReservaResponseDTO fromEntity(Reserva reserva) {
+    public static ReservaResponseDTO fromEntity(Reserva reserva, String tipoRecurso) {
         return new ReservaResponseDTO(
-                reserva.getId(),
-                reserva.getInicioDateTime(),
-                reserva.getFimDateTime(),
-                reserva.getStatus(),
-                reserva.getTipo(),
+                reserva.getId(), reserva.getInicioDateTime(), reserva.getFimDateTime(),
+                reserva.getStatus(), reserva.getTipo(),
                 reserva.getUsuario() != null ? reserva.getUsuario().getId() : null,
-                reserva.getRecurso().getId(),
-                reserva.getRecurso().getNome(),
-                reserva.getDataHoraCheckin(),
-                reserva.getDataHoraCheckout(),
-                reserva.getMotivoCancelamento(),
-                reserva.getDataHoraCancelamento(),
-                reserva.getCreatedAt(),
-                reserva.getUpdatedAt()
+                reserva.getRecurso().getId(), reserva.getRecurso().getNome(),
+                tipoRecurso,
+                reserva.getDataHoraCheckin(), reserva.getDataHoraCheckout(),
+                reserva.getMotivoCancelamento(), reserva.getDataHoraCancelamento(),
+                reserva.getCreatedAt(), reserva.getUpdatedAt()
         );
     }
 }

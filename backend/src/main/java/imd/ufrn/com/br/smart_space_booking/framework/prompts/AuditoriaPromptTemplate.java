@@ -11,7 +11,9 @@ import java.util.stream.Collectors;
  * O framework é dono do que NÃO pode variar entre hotspots:
  *  - o fluxo em 3 etapas (validação da imagem → identidade → avaliação);
  *  - as regras de formatação JSON;
- *  - o CONTRATO JSON de saída, que precisa bater EXATAMENTE com AuditoriaResultadoDTO.
+ *  - o CONTRATO JSON de saída, que precisa bater EXATAMENTE com AuditoriaResultadoDTO;
+ *  - a contagem explícita de quantas imagens são de referência, para o Gemini nunca
+ *    ter que "adivinhar" a partir de qual posição começam as fotos do usuário.
  *
  * Cada hotspot preenche apenas os "slots" de domínio (o que é uma imagem válida,
  * quais elementos definem a identidade do recurso, o que ignorar na comparação).
@@ -22,9 +24,16 @@ public abstract class AuditoriaPromptTemplate {
 
     // ─── Template Methods — o framework define O QUE e EM QUE ORDEM ────────────
 
-    public final String promptCheckIn() {
+    /**
+     * @param quantidadeReferencia número de imagens de referência do recurso que
+     *                             precedem as imagens do usuário no request ao Gemini —
+     *                             necessário para ancorar a ordem das fotos do usuário
+     *                             corretamente, já que hotspots podem ter 0, 1 ou N
+     *                             imagens de referência cadastradas.
+     */
+    public final String promptCheckIn(int quantidadeReferencia) {
         return PAPEL.formatted(recurso())
-                + INTRO_CHECKIN
+                + INTRO_CHECKIN.formatted(quantidadeReferencia, quantidadeReferencia + 1)
                 + ETAPA_VALIDACAO.formatted(descricaoImagemValida())
                 + etapaIdentidade()
                 + RESPOSTA_IDENTIDADE_FALHA
@@ -32,9 +41,9 @@ public abstract class AuditoriaPromptTemplate {
                 + CONTRATO_JSON_CHECKIN;
     }
 
-    public final String promptCheckOut(List<RegraAvaliacao> regras) {
+    public final String promptCheckOut(List<RegraAvaliacao> regras, int quantidadeReferencia) {
         return PAPEL.formatted(recurso())
-                + INTRO_CHECKOUT
+                + INTRO_CHECKOUT.formatted(quantidadeReferencia, quantidadeReferencia + 1)
                 + ETAPA_VALIDACAO.formatted(descricaoImagemValida())
                 + etapaIdentidade()
                 + RESPOSTA_IDENTIDADE_FALHA
@@ -48,7 +57,13 @@ public abstract class AuditoriaPromptTemplate {
     /** Nome do recurso auditado. Ex.: "espaços corporativos (salas)", "veículos". */
     protected abstract String recurso();
 
-    /** O que caracteriza uma imagem válida. Ex.: "um ambiente interno (sala, escritório...)". */
+    /**
+     * O que caracteriza uma imagem válida, e a ordem esperada das fotos ENVIADAS
+     * PELO USUÁRIO — nunca descreva posição absoluta no conjunto de imagens do
+     * request (as de referência entram antes e deslocam a contagem); descreva
+     * sempre em relação às imagens do usuário, ex.: "a 1ª foto enviada pelo
+     * usuário deve ser X, a 2ª deve ser Y".
+     */
     protected abstract String descricaoImagemValida();
 
     /** Elementos ESTRUTURAIS/FIXOS a comparar para confirmar a identidade do recurso. */
@@ -88,16 +103,24 @@ public abstract class AuditoriaPromptTemplate {
 
     private static final String INTRO_CHECKIN = """
 
-            As PRIMEIRAS imagens mostram o estado PADRÃO esperado (fotos de referência do sistema).
-            As imagens SEGUINTES foram fotografadas agora pelo usuário no momento do check-in.
+            As PRIMEIRAS %d imagem(ns) deste conjunto mostram o estado PADRÃO esperado
+            (fotos de referência cadastradas no sistema para este recurso específico).
+            A PARTIR DA IMAGEM DE NÚMERO %d (contando desde a primeira imagem enviada
+            nesta mensagem), todas as imagens seguintes foram fotografadas AGORA pelo
+            usuário no momento do check-in. Use essa contagem exata — não assuma que
+            a foto de referência é uma foto do usuário.
 
             Siga as etapas abaixo em ordem. Se qualquer etapa falhar, pare e retorne imediatamente.
             """;
 
     private static final String INTRO_CHECKOUT = """
 
-            As PRIMEIRAS imagens mostram o estado PADRÃO esperado (fotos de referência do sistema).
-            As imagens SEGUINTES mostram o estado ATUAL do recurso APÓS o uso do usuário.
+            As PRIMEIRAS %d imagem(ns) deste conjunto mostram o estado PADRÃO esperado
+            (fotos de referência cadastradas no sistema para este recurso específico).
+            A PARTIR DA IMAGEM DE NÚMERO %d (contando desde a primeira imagem enviada
+            nesta mensagem), todas as imagens seguintes mostram o estado ATUAL do
+            recurso APÓS o uso do usuário. Use essa contagem exata — não assuma que
+            a foto de referência é uma foto do usuário.
 
             Siga as etapas abaixo em ordem. Se qualquer etapa falhar, pare e retorne imediatamente.
             """;
@@ -105,7 +128,8 @@ public abstract class AuditoriaPromptTemplate {
     private static final String ETAPA_VALIDACAO = """
 
             ETAPA 1 — VALIDAÇÃO DA IMAGEM:
-            Verifique se as imagens enviadas mostram claramente %s.
+            Verifique se as imagens enviadas pelo usuário (ou seja, ignorando as de
+            referência) mostram claramente %s.
             Se não corresponder, defina "imagemValida": false e "recursoCorreto": false na resposta.
             """;
 

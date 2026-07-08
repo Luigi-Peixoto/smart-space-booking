@@ -1,24 +1,25 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../App.css";
-import { AuthContext } from "../../contexts/AuthContext";
-import { cadastrarSala } from "../../services/api";
-import { uploadArquivo } from "../../services/apiFiles";
-import "./Admin.css";
-import "./CadastroSala.css";
+import "../../../../App.css";
+import { AuthContext } from "../../../../contexts/AuthContext";
+import "../../../../pages/AdminPages/Admin.css";
+import { cadastrarVeiculo } from "../../../../services/api";
+import { uploadArquivo } from "../../../../services/apiFiles";
+import "./CadastroVeiculo.css";
 
-function CadastroSala() {
+function CadastroVeiculo() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     nome: "",
-    capacidade: "",
-    local: "",
+    placa: "",
+    chassi: "",
+    renavam: "",
+    marca: "",
+    modelo: "",
+    cor: "",
     status: "ATIVA",
-    tipoSala: "REUNIAO",
-    caracteristicasTexto: "",
-    imagem: "",
   });
 
   const [arquivosSelecionados, setArquivosSelecionados] = useState([]);
@@ -40,7 +41,7 @@ function CadastroSala() {
     e.preventDefault();
 
     if (arquivosSelecionados.length === 0) {
-      alert("Por favor, selecione pelo menos uma imagem para a sala.");
+      alert("Por favor, selecione pelo menos uma imagem para o veículo.");
       return;
     }
 
@@ -52,25 +53,19 @@ function CadastroSala() {
       );
       const imageIDs = await Promise.all(uploadPromises);
 
-      const listaCaracteristicas = formData.caracteristicasTexto
-        .split(",")
-        .map((item) => item.trim())
-        .filter((item) => item !== "");
-
       const dadosParaEnviar = {
         ...formData,
-        capacidade: parseInt(formData.capacidade),
-        caracteristicas: listaCaracteristicas,
+        placa: formData.placa.toUpperCase(),
         imagens: imageIDs,
       };
 
-      await cadastrarSala(dadosParaEnviar, user.id);
+      await cadastrarVeiculo(dadosParaEnviar, user.id);
 
-      alert("Sala cadastrada com sucesso!");
-      navigate("/salas/admin");
+      alert("Veículo cadastrado com sucesso!");
+      navigate("/veiculos/admin");
     } catch (error) {
       console.error("Erro no cadastro:", error);
-      alert("Erro ao processar imagens ou cadastrar sala.");
+      alert("Erro ao processar imagens ou cadastrar veículo.");
     } finally {
       setCarregando(false);
     }
@@ -80,12 +75,12 @@ function CadastroSala() {
     <div className="admin-container">
       <main className="admin-main">
         <div className="page-header">
-          <h1 className="page-title">Cadastro de Sala</h1>
+          <h1 className="page-title">Cadastro de Veículo</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="cadastro-form">
           <div className="input-group">
-            <label>Nome da Sala (ex: B402 - IMD)</label>
+            <label>Nome/Identificação (ex: Corolla Frota 01)</label>
             <input
               type="text"
               required
@@ -99,14 +94,41 @@ function CadastroSala() {
 
           <div className="form-row">
             <div className="input-group">
-              <label>Capacidade (Pessoas)</label>
+              <label>Marca</label>
               <input
-                type="number"
+                type="text"
                 required
-                placeholder="Ex: 10"
-                value={formData.capacidade}
+                placeholder="Ex: Toyota"
+                value={formData.marca}
                 onChange={(e) =>
-                  setFormData({ ...formData, capacidade: e.target.value })
+                  setFormData({ ...formData, marca: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-group">
+              <label>Modelo</label>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Corolla"
+                value={formData.modelo}
+                onChange={(e) =>
+                  setFormData({ ...formData, modelo: e.target.value })
+                }
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="input-group">
+              <label>Cor</label>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Prata"
+                value={formData.cor}
+                onChange={(e) =>
+                  setFormData({ ...formData, cor: e.target.value })
                 }
               />
             </div>
@@ -125,55 +147,49 @@ function CadastroSala() {
           </div>
 
           <div className="input-group">
-            <label>Tipo de Sala</label>
-            <select
-              value={formData.tipoSala}
-              onChange={(e) =>
-                setFormData({ ...formData, tipoSala: e.target.value })
-              }
-            >
-              <option value="REUNIAO">Sala de Reunião</option>
-              <option value="CONFERENCIA">Sala de Conferência</option>
-              <option value="LABORATORIO">Laboratório</option>
-              <option value="ESTUDO_INDIVIDUAL">
-                Sala de Estudo Individual
-              </option>
-            </select>
-          </div>
-
-          <div className="input-group">
-            <label>Localização (Prédio/Andar)</label>
+            <label>Placa</label>
             <input
               type="text"
               required
-              placeholder="Ex: Terceiro andar, B402"
-              value={formData.local}
+              placeholder="Ex: ABC1D23"
+              value={formData.placa}
               onChange={(e) =>
-                setFormData({ ...formData, local: e.target.value })
+                setFormData({ ...formData, placa: e.target.value })
               }
             />
           </div>
 
-          <div className="input-group">
-            <label>Características (Separe por vírgula)</label>
-            <input
-              type="text"
-              placeholder="Ex: TV, Ar-condicionado, Wi-Fi"
-              value={formData.caracteristicasTexto}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  caracteristicasTexto: e.target.value,
-                })
-              }
-            />
-            <small style={{ color: "#666", fontSize: "12px" }}>
-              Os itens serão listados individualmente na visualização.
-            </small>
+          <div className="form-row">
+            <div className="input-group">
+              <label>Chassi</label>
+              <input
+                type="text"
+                required
+                placeholder="17 caracteres"
+                maxLength={17}
+                value={formData.chassi}
+                onChange={(e) =>
+                  setFormData({ ...formData, chassi: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-group">
+              <label>RENAVAM</label>
+              <input
+                type="text"
+                required
+                placeholder="11 dígitos"
+                maxLength={11}
+                value={formData.renavam}
+                onChange={(e) =>
+                  setFormData({ ...formData, renavam: e.target.value })
+                }
+              />
+            </div>
           </div>
 
           <div className="input-group">
-            <label>Fotos da Sala</label>
+            <label>Fotos do Veículo</label>
             <input
               type="file"
               multiple
@@ -209,7 +225,7 @@ function CadastroSala() {
             <button
               type="button"
               className="btn-cancel"
-              onClick={() => navigate("/salas/admin")}
+              onClick={() => navigate("/veiculos/admin")}
             >
               Cancelar
             </button>
@@ -218,7 +234,7 @@ function CadastroSala() {
               className="btn-primary btn-save"
               disabled={carregando}
             >
-              {carregando ? "Fazendo Upload..." : "Salvar Sala"}
+              {carregando ? "Fazendo Upload..." : "Salvar Veículo"}
             </button>
           </div>
         </form>
@@ -227,4 +243,4 @@ function CadastroSala() {
   );
 }
 
-export default CadastroSala;
+export default CadastroVeiculo;

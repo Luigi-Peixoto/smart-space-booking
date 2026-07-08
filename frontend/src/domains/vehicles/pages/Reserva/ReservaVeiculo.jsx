@@ -1,14 +1,14 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import SSBLogo from "../../assets/SSBLogo.png";
-import imagemMockada from "../../assets/mockImagemSala.jpg";
-import { AuthContext } from "../../contexts/AuthContext";
+import SSBLogo from "../../../../assets/SSBLogo.png";
+import imagemMockada from "../../../../assets/mockImagemSala.jpg";
+import { AuthContext } from "../../../../contexts/AuthContext";
+import "../../../../pages/Reserva/Reserva.css";
 import {
-  criarReserva,
-  getHorariosOcupados,
-  getSalaById,
-} from "../../services/api";
-import "./Reserva.css";
+  criarReservaVeiculo,
+  getHorariosOcupadosVeiculo,
+  getVeiculoById,
+} from "../../../../services/api";
 
 const FILE_SERVER_URL = "http://localhost:8088/api/file-server/v1/files";
 const USER_ID = 1;
@@ -66,14 +66,14 @@ const getDataLocalISO = () => {
   return `${ano}-${mes}-${dia}`;
 };
 
-export default function Reserva() {
+export default function ReservaVeiculo() {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
 
   const navigate = useNavigate();
 
   const [erro, setErro] = useState(false);
-  const [sala, setSala] = useState(null);
+  const [veiculo, setVeiculo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -88,25 +88,25 @@ export default function Reserva() {
   const userId = user?.id || USER_ID;
 
   useEffect(() => {
-    async function carregarSala() {
+    async function carregarVeiculo() {
       try {
-        const response = await getSalaById(id);
-        if (!response.data) throw new Error("Sala não encontrada");
-        setSala(response.data);
+        const response = await getVeiculoById(id);
+        if (!response.data) throw new Error("Veículo não encontrado");
+        setVeiculo(response.data);
       } catch (error) {
-        console.error("Erro ao carregar sala:", error);
+        console.error("Erro ao carregar veículo:", error);
         setErro(true);
       } finally {
         setLoading(false);
       }
     }
-    carregarSala();
+    carregarVeiculo();
   }, [id]);
 
   useEffect(() => {
     async function carregarDisponibilidade() {
       try {
-        const response = await getHorariosOcupados(id, data);
+        const response = await getHorariosOcupadosVeiculo(id, data);
         setHorariosOcupados(response.data);
       } catch (error) {
         console.error("Erro ao carregar horários ocupados:", error);
@@ -138,7 +138,7 @@ export default function Reserva() {
 
     try {
       setSubmitting(true);
-      await criarReserva(reservaData);
+      await criarReservaVeiculo(reservaData);
       setShowModal(true);
     } catch (error) {
       console.error("Erro ao criar reserva:", error);
@@ -151,7 +151,8 @@ export default function Reserva() {
     }
   };
 
-  if (loading) return <div className="loading-screen">Carregando sala...</div>;
+  if (loading)
+    return <div className="loading-screen">Carregando veículo...</div>;
 
   if (erro) {
     return (
@@ -161,14 +162,14 @@ export default function Reserva() {
             <i className="material-icons error-icon">
               sentiment_very_dissatisfied
             </i>
-            <h2>Sala não encontrada</h2>
+            <h2>Veículo não encontrado</h2>
             <p>
-              Não conseguimos localizar os detalhes desta sala. <br />
-              Ela pode ter sido removida ou o link está incorreto.
+              Não conseguimos localizar os detalhes deste veículo. <br />
+              Ele pode ter sido removido ou o link está incorreto.
             </p>
             <button
               className="btn-error-fallback"
-              onClick={() => navigate("/salas/home")}
+              onClick={() => navigate("/veiculos/home")}
             >
               <i className="material-icons">arrow_back</i>
               Voltar para a Home
@@ -196,14 +197,12 @@ export default function Reserva() {
 
             <div className="modal-detailed-confirmation">
               <p>
-                Sua reserva para <strong>{sala?.nome}</strong> em{" "}
+                Sua reserva para <strong>{veiculo?.nome}</strong> em{" "}
                 <strong>{formatLongDate(data)}</strong>, das{" "}
                 <strong>{inicio}</strong> às <strong>{fim}</strong>, para um
                 total de{" "}
-                <strong>
-                  {calcDurationLabel(inicio, fim)} de uso + 15min limpeza
-                </strong>
-                , foi concluída com sucesso.
+                <strong>{calcDurationLabel(inicio, fim)} de uso</strong>, foi
+                concluída com sucesso.
               </p>
             </div>
 
@@ -217,7 +216,7 @@ export default function Reserva() {
             <div className="modal-actions-refined">
               <button
                 className="btn-voltar-home-premium"
-                onClick={() => navigate("/salas/home")}
+                onClick={() => navigate("/veiculos/home")}
               >
                 <i className="material-icons">home</i>
                 <i className="material-icons">arrow_back</i>
@@ -237,50 +236,26 @@ export default function Reserva() {
               <div className="sala-info-main">
                 <img
                   src={
-                    sala.imagens?.[0]
-                      ? `${FILE_SERVER_URL}/${sala.imagens[0]}`
+                    veiculo.imagens?.[0]
+                      ? `${FILE_SERVER_URL}/${veiculo.imagens[0]}`
                       : imagemMockada
                   }
-                  alt="Sala"
+                  alt="Veículo"
                   className="sala-img-mini"
                 />
                 <div className="sala-textos">
-                  <h2 className="sala-nome-destaque">{sala?.nome}</h2>
+                  <h2 className="sala-nome-destaque">{veiculo?.nome}</h2>
                   <div className="sala-tags">
                     <span>
-                      <i className="material-icons">groups</i>{" "}
-                      {sala?.capacidade} pessoas
+                      <i className="material-icons">directions_car</i>{" "}
+                      {veiculo?.marca} {veiculo?.modelo}
                     </span>
-
-                    {sala?.caracteristicas?.map((item, index) => {
-                      const getIcon = (text) => {
-                        const t = text.toLowerCase();
-                        if (t.includes("wifi") || t.includes("wi-fi"))
-                          return "wifi";
-                        if (t.includes("projetor") || t.includes("telão"))
-                          return "videocam";
-                        if (t.includes("som") || t.includes("áudio"))
-                          return "volume_up";
-                        if (
-                          t.includes("display") ||
-                          t.includes("monitor") ||
-                          t.includes("tv")
-                        )
-                          return "monitor";
-                        if (t.includes("ar") || t.includes("climatizado"))
-                          return "ac_unit";
-                        if (t.includes("quadro") || t.includes("lousa"))
-                          return "edit";
-                        return "check_circle_outline";
-                      };
-
-                      return (
-                        <span key={index}>
-                          <i className="material-icons">{getIcon(item)}</i>{" "}
-                          {item}
-                        </span>
-                      );
-                    })}
+                    <span>
+                      <i className="material-icons">badge</i> {veiculo?.placa}
+                    </span>
+                    <span>
+                      <i className="material-icons">palette</i> {veiculo?.cor}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -296,7 +271,7 @@ export default function Reserva() {
                   <input
                     type="date"
                     value={data}
-                    onChange={(e) => setData(e.target.value)} // Muda o estado 'data'
+                    onChange={(e) => setData(e.target.value)}
                     className="figma-input-large"
                     min={getDataLocalISO()}
                   />
@@ -353,7 +328,7 @@ export default function Reserva() {
                 <div className="total-box">
                   <span className="label-caps">TOTAL DA RESERVA</span>
                   <p className="total-text">
-                    {calcDurationLabel(inicio, fim)} de uso + 15min limpeza
+                    {calcDurationLabel(inicio, fim)} de uso
                   </p>
                 </div>
                 <button
