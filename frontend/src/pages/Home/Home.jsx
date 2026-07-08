@@ -135,7 +135,7 @@ function Home() {
                     {/* Botão disabled puro. O CSS cuida de deixar ele cinza! */}
                     <button 
                       className="btn-primary" 
-                      onClick={() => !isManutencao && navigate('/criar-reserva/' + sala.id)}
+                      onClick={() => !isManutencao && navigate('/salas/criar-reserva/' + sala.id)}
                       disabled={isManutencao}
                     >
                       {isManutencao ? (

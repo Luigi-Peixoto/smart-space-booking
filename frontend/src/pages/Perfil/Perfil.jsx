@@ -183,10 +183,10 @@ function Perfil() {
   function handleAcao(reserva) {
     switch (reserva.statusVisual) {
       case "FAZER CHECK-IN":
-        navigate(`/checkin/${reserva.id}`);
+        navigate(`/salas/checkin/${reserva.id}`);
         break;
       case "FAZER CHECK-OUT":
-        navigate(`/checkout/${reserva.id}`);
+        navigate(`/salas/checkout/${reserva.id}`);
         break;
       case "CANCELAR":
         abrirModalCancelamento(reserva);
